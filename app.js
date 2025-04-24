@@ -67,49 +67,39 @@ function renderCards(data) {
     const d = document.createElement('div');
     d.className = 'card';
     d.innerHTML = `
-
-<div class="title">
-    ${o['Codice']} – ${o['Sestiere']}
-  </div>
-  <div class="subtitle">
-    ${o['Indirizzo']}, ${o['Civico']}
-  </div>
-  <div class="collocazione">
-    ${o['Collocazione']}
-  </div>
-  <div class="coords">
-    ${o['Coordinates WGS84']}
-  </div>
-  <img src="${o['URL foto']}" class="image">
-  <div class="descrizione">
-    ${o['Descrizione']}
-  </div>
-  <div class="iscrizione">
-    ${o['Isccrizione']}
-  </div>
-  <div class="bibliografia">
-    ${o['Bibliografia']}
-  </div>
-  <div class="note">
-    ${o['Note']}
-  </div>
-
-
-  `;
+      <div class="title">${o['Codice']} – ${o['Sestiere']}</div>
+      <div class="subtitle">${o['Indirizzo']}, ${o['Civico']}</div>
+                  <img src="${o['URL thumbnail']}" class="thumb">
+    `;
     d.onclick = () => renderDetail(o);
     content.appendChild(d);
   });
 }
 
+
 function renderDetail(o) {
   const content = document.getElementById('content');
   content.innerHTML = `
     <button onclick="location.reload()">← Reset</button>
-    <h1>${o.Collocazione}</h1>
-    <img src="${o['URL foto']}" style="max-width:100%">
-    <p><strong>Descrizione:</strong> ${o['Descrizione']}</p>
+    <div class="title">${o['Codice']} – ${o['Sestiere']}</div>
+    <div class="subtitle">${o['Indirizzo']}, ${o['Civico']}</div>
+    <div class="collocazione">${o['Collocazione']}</div>
+    <div class="coords">${o['Coordinates WGS84']}</div>
+    <img 
+      src="${o['URL foto']}" 
+      alt="Foto di ${o['Collocazione']}" 
+      class="detail-photo"
+    />
+    <div class="descrizione"><strong>Descrizione:</strong> ${o['Descrizione']}</div>
+    <div class="iscrizione"><strong>Iscrizione:</strong> ${o['Iscrizione']}</div>
+    <div class="condizioni"><strong>Condizioni:</strong> ${o['Conservazione']}</div>
     <div id="map"></div>
+    <div class="bibliografia"><strong>Bibliografia:</strong> ${o['Bibliografia']}</div>
+    <div class="data-foto"><strong>Data foto:</strong> ${o['Data miglior foto']}</div>
+    <div class="note"><strong>Note:</strong> ${o['Note']}</div>
   `;
+
+  // Inizializza la mappa
   const lat = parseFloat(o['Latitudine']);
   const lng = parseFloat(o['Longitudine']);
   const map = L.map('map').setView([lat, lng], 16);
@@ -118,6 +108,7 @@ function renderDetail(o) {
   }).addTo(map);
   L.marker([lat, lng]).addTo(map);
 }
+
 
 
 document.getElementById('search').oninput = (e) => {
