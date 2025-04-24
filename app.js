@@ -68,7 +68,7 @@ function renderCards(data) {
     d.className = 'card';
     d.innerHTML = `
       <h4>${o.Codice} - ${o.Sestiere} - ${o.Parrocchia} - ${o.Indirizzo}, ${o.Civico}</h4>
-      <img src="${o.URL thumbnail}" class="thumb">
+      <img src="${o['URL thumbnail']}" class="thumb">
     `;
     d.onclick = () => renderDetail(o);
     content.appendChild(d);
@@ -77,14 +77,13 @@ function renderCards(data) {
 
 function renderDetail(o) {
   const content = document.getElementById('content');
-  content.innerHTML = `
-    <button onclick="location.reload()">← Reset</button>
-    <h1>${o.Collocazione}</h1>
-    <img src="${o['URL foto']}" style="max-width:100%">
-    <p><strong>Descrizione:</strong> ${o.Descrizione}</p>
-    <!-- aggiungi altri campi... -->
-    <div id="map"></div>
-  `;
+content.innerHTML = `
+  <button onclick="location.reload()">← Reset</button>
+  <h1>${o.Collocazione}</h1>
+  <img src="${o['URL foto']}" style="max-width:100%">
+  <p><strong>Data foto:</strong> ${o.dataFoto}</p>
+  <div id="map"></div>
+`;
   const map = L.map('map').setView([o.Latitudine, o.Longitudine], 16);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
     attribution:'&copy; OpenStreetMap'
