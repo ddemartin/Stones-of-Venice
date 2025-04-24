@@ -3,7 +3,6 @@ const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSocQMJvjtvawDY
 
 let allData = [], filtered = [];
 
-
 const JSON_URL = 'https://script.google.com/macros/s/AKfycbwJxB3tZkYe1Bj-SyrvQSMMaTvEiXOYWB1U9K9yi4Vy9sFT-pnRMEc-GtDYQHDwoPp5hg/exec';
 
 async function fetchData() {
@@ -11,9 +10,6 @@ async function fetchData() {
     const res = await fetch(JSON_URL);
     if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
     allData = await res.json();        // array di oggetti già pronti
-
-console.log('Esempio di record:', allData[0]);
-
     buildMenuSestieri();
   } catch (err) {
     console.error('Errore caricamento JSON:', err);
@@ -21,7 +17,6 @@ console.log('Esempio di record:', allData[0]);
       '<p style="color:red">Impossibile caricare i dati.</p>';
   }
 }
-
 
 
 function buildMenuSestieri() {
@@ -88,13 +83,9 @@ function renderDetail(o) {
   // Rimuove 'https://' o 'http://' dal photoUrl
   const cleanUrl = photoUrl.replace(/^https?:\/\//, '');
   const proxyUrl = 'https://images.weserv.nl/?url=' + encodeURIComponent(cleanUrl);
-
   const lat      = parseFloat(o['Latitudine']);
   const lng      = parseFloat(o['Longitudine']);
   const coordsStr= (o['Coordinate WGS84'] || '').trim() || `${lat}, ${lng}`;
-
-  console.log('Proxy URL:', proxyUrl);
-
   const content = document.getElementById('content');
   content.innerHTML = `
     <button onclick="location.reload()">← Reset</button>
@@ -110,6 +101,8 @@ function renderDetail(o) {
              src="${proxyUrl}"
              alt="Foto opera ${o['Codice']}"
              class="detail-photo"
+             loading="lazy"
+			 onerror="this.src='https://via.placeholder.com/600x400?text=Foto+non+disponibile'"
            >`
         : `<p style="color:red">Foto non disponibile</p>`
       }
