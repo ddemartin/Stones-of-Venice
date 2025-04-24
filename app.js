@@ -67,9 +67,35 @@ function renderCards(data) {
     const d = document.createElement('div');
     d.className = 'card';
     d.innerHTML = `
-      <h4>${o['Codice']} – ${o['Sestiere']} – ${o['Parrocchia']} – ${o['Indirizzo']}, ${o['Civico']}</h4>
-      <img src="${o['URL thumbnail']}" class="thumb">
-    `;
+
+<div class="title">
+    ${o['Codice']} – ${o['Sestiere']}
+  </div>
+  <div class="subtitle">
+    ${o['Indirizzo']}, ${o['Civico']}
+  </div>
+  <div class="collocazione">
+    ${o['Collocazione']}
+  </div>
+  <div class="coords">
+    ${o['Coordinates WGS84']}
+  </div>
+  <img src="${o['URL foto']}" class="image">
+  <div class="descrizione">
+    ${o['Descrizione']}
+  </div>
+  <div class="iscrizione">
+    ${o['Isccrizione']}
+  </div>
+  <div class="bibliografia">
+    ${o['Bibliografia']}
+  </div>
+  <div class="note">
+    ${o['Note']}
+  </div>
+
+
+  `;
     d.onclick = () => renderDetail(o);
     content.appendChild(d);
   });
