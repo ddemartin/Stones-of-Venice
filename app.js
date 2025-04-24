@@ -4,27 +4,21 @@ const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSocQMJvjtvawDY
 let allData = [], filtered = [];
 
 
-Papa.parse(CSV_URL, {
-  download: true,
-  header: true,
-  complete: results => console.log(results.meta.fields)
-});
+const JSON_URL = 'https://script.google.com/macros/s/AKfycbwJxB3tZkYe1Bj-SyrvQSMMaTvEiXOYWB1U9K9yi4Vy9sFT-pnRMEc-GtDYQHDwoPp5hg/exec';
 
-Papa.parse(CSV_URL, {
-  download: true,
-  header: true,
-  skipEmptyLines: true,
-  complete: function(results) {
-    // results.data è un array di oggetti chiave=colonna
-    allData = results.data;
+async function fetchData() {
+  try {
+    const res = await fetch(JSON_URL);
+    if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
+    allData = await res.json();        // array di oggetti già pronti
     buildMenuSestieri();
-  },
-  error: function(err) {
-    console.error('PapaParse error:', err);
+  } catch (err) {
+    console.error('Errore caricamento JSON:', err);
     document.getElementById('sidebar').innerHTML =
-      '<p style="color:red">Impossibile leggere il CSV (controlla la Console).</p>';
+      '<p style="color:red">Impossibile caricare i dati.</p>';
   }
-});
+}
+
 
 
 function buildMenuSestieri() {
