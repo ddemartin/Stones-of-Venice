@@ -79,12 +79,12 @@ function renderCards(data) {
   });
 }
 
-
 function renderDetail(o) {
   const content = document.getElementById('content');
-
-  // Prendi e pulisci l'URL della foto
   const photoUrl = (o['URL foto'] || '').trim();
+  const coordsStr = (o['Coordinate WGS84'] || '').trim();
+  const lat = parseFloat(o['Latitudine']);
+  const lng = parseFloat(o['Longitudine']);
 
   content.innerHTML = `
     <button onclick="location.reload()">← Reset</button>
@@ -93,7 +93,7 @@ function renderDetail(o) {
       <div class="title">${o['Codice']} – ${o['Sestiere']}</div>
       <div class="subtitle">${o['Indirizzo']}, ${o['Civico']}</div>
       <div class="collocazione">${o['Collocazione']}</div>
-      <div class="coords">${o['Coordinate WGS84']}</div>
+      <div class="coords">${coordsStr || (lat + ', ' + lng)}</div>
 
       ${photoUrl
         ? `<img src="${photoUrl}" alt="${o['Collocazione']}" class="detail-photo">`
@@ -112,17 +112,12 @@ function renderDetail(o) {
     </div>
   `;
 
-  // Inizializza la mappa
-  const lat = parseFloat(o['Latitudine']);
-  const lng = parseFloat(o['Longitudine']);
   const map = L.map('map').setView([lat, lng], 16);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap'
   }).addTo(map);
   L.marker([lat, lng]).addTo(map);
 }
-
-
 
 
 document.getElementById('search').oninput = (e) => {
