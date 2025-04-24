@@ -3,6 +3,13 @@ const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSocQMJvjtvawDY
 
 let allData = [], filtered = [];
 
+
+Papa.parse(CSV_URL, {
+  download: true,
+  header: true,
+  complete: results => console.log(results.meta.fields)
+});
+
 Papa.parse(CSV_URL, {
   download: true,
   header: true,
