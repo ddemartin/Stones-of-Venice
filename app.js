@@ -11,6 +11,9 @@ async function fetchData() {
     const res = await fetch(JSON_URL);
     if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
     allData = await res.json();        // array di oggetti già pronti
+
+console.log('Esempio di record:', allData[0]);
+
     buildMenuSestieri();
   } catch (err) {
     console.error('Errore caricamento JSON:', err);
@@ -108,8 +111,6 @@ function renderDetail(o) {
       <div class="note"><strong>Note:</strong> ${o['Note']}</div>
     </div>
   `;
-
-console.log('URL foto:', photoUrl);
 
   // Inizializza la mappa
   const lat = parseFloat(o['Latitudine']);
