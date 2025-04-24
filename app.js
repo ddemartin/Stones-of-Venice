@@ -79,24 +79,34 @@ function renderCards(data) {
 
 function renderDetail(o) {
   const content = document.getElementById('content');
+
+  // Prendi e pulisci l'URL della foto
+  const photoUrl = (o['URL foto'] || '').trim();
+
   content.innerHTML = `
     <button onclick="location.reload()">← Reset</button>
-    <div class="title">${o['Codice']} – ${o['Sestiere']}</div>
-    <div class="subtitle">${o['Indirizzo']}, ${o['Civico']}</div>
-    <div class="collocazione">${o['Collocazione']}</div>
-    <div class="coords">${o['Coordinates WGS84']}</div>
-    <img 
-      src="${o['URL foto']}" 
-      alt="Foto di ${o['Collocazione']}" 
-      class="detail-photo"
-    />
-    <div class="descrizione"><strong>Descrizione:</strong> ${o['Descrizione']}</div>
-    <div class="iscrizione"><strong>Iscrizione:</strong> ${o['Iscrizione']}</div>
-    <div class="condizioni"><strong>Condizioni:</strong> ${o['Conservazione']}</div>
-    <div id="map"></div>
-    <div class="bibliografia"><strong>Bibliografia:</strong> ${o['Bibliografia']}</div>
-    <div class="data-foto"><strong>Data foto:</strong> ${o['Data miglior foto']}</div>
-    <div class="note"><strong>Note:</strong> ${o['Note']}</div>
+
+    <div class="detail-card">
+      <div class="title">${o['Codice']} – ${o['Sestiere']}</div>
+      <div class="subtitle">${o['Indirizzo']}, ${o['Civico']}</div>
+      <div class="collocazione">${o['Collocazione']}</div>
+      <div class="coords">${o['Coordinates WGS84']}</div>
+
+      ${photoUrl
+        ? `<img src="${photoUrl}" alt="${o['Collocazione']}" class="detail-photo">`
+        : `<p style="color:red">Foto non disponibile</p>`
+      }
+
+      <div class="descrizione"><strong>Descrizione:</strong> ${o['Descrizione']}</div>
+      <div class="iscrizione"><strong>Iscrizione:</strong> ${o['Iscrizione']}</div>
+      <div class="condizioni"><strong>Condizioni:</strong> ${o['Conservazione']}</div>
+
+      <div id="map"></div>
+
+      <div class="bibliografia"><strong>Bibliografia:</strong> ${o['Bibliografia']}</div>
+      <div class="datafoto"><strong>Data foto:</strong> ${o['Data miglior foto']}</div>
+      <div class="note"><strong>Note:</strong> ${o['Note']}</div>
+    </div>
   `;
 
   // Inizializza la mappa
@@ -108,6 +118,7 @@ function renderDetail(o) {
   }).addTo(map);
   L.marker([lat, lng]).addTo(map);
 }
+
 
 
 
