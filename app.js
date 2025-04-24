@@ -3,23 +3,22 @@ const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSocQMJvjtvawDY
 
 let allData = [], filtered = [];
 
-async function fetchData() {
-  const res = await fetch(CSV_URL);
-  const text = await res.text();
-  parseCSV(text);
-  buildMenuSestieri();
-}
+Papa.parse(CSV_URL, {
+  download: true,
+  header: true,
+  skipEmptyLines: true,
+  complete: function(results) {
+    // results.data è un array di oggetti chiave=colonna
+    allData = results.data;
+    buildMenuSestieri();
+  },
+  error: function(err) {
+    console.error('PapaParse error:', err);
+    document.getElementById('sidebar').innerHTML =
+      '<p style="color:red">Impossibile leggere il CSV (controlla la Console).</p>';
+  }
+});
 
-function parseCSV(text) {
-  const [headerLine, ...lines] = text.trim().split('\n');
-  const headers = headerLine.split(',');
-  allData = lines.map(l => {
-    const cols = l.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-    let obj = {};
-    headers.forEach((h,i) => obj[h.trim()] = cols[i] && cols[i].replace(/(^"|"$)/g,''));
-    return obj;
-  });
-}
 
 function buildMenuSestieri() {
   const ul = document.getElementById('list-sestieri');
@@ -67,7 +66,7 @@ function renderCards(data) {
     const d = document.createElement('div');
     d.className = 'card';
     d.innerHTML = `
-      <h4>${o.Codice} – ${o.Sestiere} – ${o.Parrocchia} – ${o.Indirizzo}, ${o.Civico}</h4>
+      <h4>${o['Codice']} – ${o['Sestiere']} – ${o['Parrocchia']} – ${o['Indirizzo']}, ${o['Civico']}</h4>
       <img src="${o['URL thumbnail']}" class="thumb">
     `;
     d.onclick = () => renderDetail(o);
@@ -81,15 +80,18 @@ function renderDetail(o) {
     <button onclick="location.reload()">← Reset</button>
     <h1>${o.Collocazione}</h1>
     <img src="${o['URL foto']}" style="max-width:100%">
-    <p><strong>Descrizione:</strong> ${o.Descrizione}</p>
+    <p><strong>Descrizione:</strong> ${o['Descrizione']}</p>
     <div id="map"></div>
   `;
-  const map = L.map('map').setView([parseFloat(o.Latitudine), parseFloat(o.Longitudine)], 16);
+  const lat = parseFloat(o['Latitudine']);
+  const lng = parseFloat(o['Longitudine']);
+  const map = L.map('map').setView([lat, lng], 16);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution:'&copy; OpenStreetMap'
+    attribution: '&copy; OpenStreetMap'
   }).addTo(map);
-  L.marker([parseFloat(o.Latitudine), parseFloat(o.Longitudine)]).addTo(map);
+  L.marker([lat, lng]).addTo(map);
 }
+
 
 document.getElementById('search').oninput = (e) => {
   filtered = allData.filter(o =>
