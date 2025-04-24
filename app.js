@@ -80,23 +80,27 @@ function renderCards(data) {
 }
 
 function renderDetail(o) {
-  const content = document.getElementById('content');
-  const photoUrl = (o['URL foto'] || '').trim();
-  const coordsStr = (o['Coordinate WGS84'] || '').trim();
+  // Estrai e pulisci i campi
+  const rawUrl = o['URL foto'] || '';
+  const photoUrl = rawUrl.replace(/^"+|"+$/g, '').trim();
   const lat = parseFloat(o['Latitudine']);
   const lng = parseFloat(o['Longitudine']);
+  const coordsStr = (o['Coordinate WGS84'] || '').trim() || `${lat}, ${lng}`;
 
+  console.log('Foto URL:', photoUrl);
+  console.log('Coordinates:', coordsStr);
+
+  const content = document.getElementById('content');
   content.innerHTML = `
     <button onclick="location.reload()">← Reset</button>
-
     <div class="detail-card">
       <div class="title">${o['Codice']} – ${o['Sestiere']}</div>
       <div class="subtitle">${o['Indirizzo']}, ${o['Civico']}</div>
       <div class="collocazione">${o['Collocazione']}</div>
-      <div class="coords">${coordsStr || (lat + ', ' + lng)}</div>
+      <div class="coords">${coordsStr}</div>
 
       ${photoUrl
-        ? `<img src="${photoUrl}" alt="${o['Collocazione']}" class="detail-photo">`
+        ? `<img src="${photoUrl}" alt="Foto opera ${o['Codice']}" class="detail-photo">`
         : `<p style="color:red">Foto non disponibile</p>`
       }
 
@@ -112,12 +116,14 @@ function renderDetail(o) {
     </div>
   `;
 
+  // Inizializza la mappa OpenStreetMap
   const map = L.map('map').setView([lat, lng], 16);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap'
   }).addTo(map);
   L.marker([lat, lng]).addTo(map);
 }
+v
 
 
 document.getElementById('search').oninput = (e) => {
