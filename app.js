@@ -80,36 +80,39 @@ function renderCards(data) {
 }
 
 function renderDetail(o) {
-  // Estrai e pulisci i campi
-  const rawUrl = o['URL foto'] || '';
-  const photoUrl = rawUrl.replace(/^"+|"+$/g, '').trim();
-  const lat = parseFloat(o['Latitudine']);
-  const lng = parseFloat(o['Longitudine']);
-  const coordsStr = (o['Coordinate WGS84'] || '').trim() || `${lat}, ${lng}`;
+  // Estrai e pulisci l'URL originale
+  const rawUrl   = o['URL foto'] || '';
+  const photoUrl = rawUrl.replace(/^\"+|\"+$/g, '').trim();
 
-  console.log('Foto URL:', photoUrl);
-  console.log('Coordinates:', coordsStr);
+  // Costruisci l'URL proxy
+  // Rimuove 'https://' o 'http://' dal photoUrl
+  const cleanUrl = photoUrl.replace(/^https?:\/\//, '');
+  const proxyUrl = 'https://images.weserv.nl/?url=' + encodeURIComponent(cleanUrl);
+
+  const lat      = parseFloat(o['Latitudine']);
+  const lng      = parseFloat(o['Longitudine']);
+  const coordsStr= (o['Coordinate WGS84'] || '').trim() || `${lat}, ${lng}`;
+
+  console.log('Proxy URL:', proxyUrl);
 
   const content = document.getElementById('content');
   content.innerHTML = `
     <button onclick="location.reload()">← Reset</button>
+
     <div class="detail-card">
       <div class="title">${o['Codice']} – ${o['Sestiere']}</div>
       <div class="subtitle">${o['Indirizzo']}, ${o['Civico']}</div>
       <div class="collocazione">${o['Collocazione']}</div>
       <div class="coords">${coordsStr}</div>
 
-${photoUrl
-  ? `<img 
-       src="${photoUrl}" 
-       alt="Foto opera ${o['Codice']}" 
-       class="detail-photo"
-       crossOrigin="anonymous"
-       referrerpolicy="no-referrer"
-     >`
-  : `<p style="color:red">Foto non disponibile</p>`
-}
-
+      ${photoUrl
+        ? `<img
+             src="${proxyUrl}"
+             alt="Foto opera ${o['Codice']}"
+             class="detail-photo"
+           >`
+        : `<p style="color:red">Foto non disponibile</p>`
+      }
 
       <div class="descrizione"><strong>Descrizione:</strong> ${o['Descrizione']}</div>
       <div class="iscrizione"><strong>Iscrizione:</strong> ${o['Iscrizione']}</div>
@@ -123,13 +126,13 @@ ${photoUrl
     </div>
   `;
 
-  // Inizializza la mappa OpenStreetMap
   const map = L.map('map').setView([lat, lng], 16);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap'
   }).addTo(map);
   L.marker([lat, lng]).addTo(map);
 }
+
 
 document.getElementById('search').oninput = (e) => {
   filtered = allData.filter(o =>
