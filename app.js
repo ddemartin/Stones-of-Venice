@@ -123,8 +123,6 @@ function renderDetail(o) {
   }).addTo(map);
   L.marker([lat, lng]).addTo(map);
 }
-v
-
 
 document.getElementById('search').oninput = (e) => {
   filtered = allData.filter(o =>
