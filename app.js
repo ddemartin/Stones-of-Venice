@@ -99,10 +99,17 @@ function renderDetail(o) {
       <div class="collocazione">${o['Collocazione']}</div>
       <div class="coords">${coordsStr}</div>
 
-      ${photoUrl
-        ? `<img src="${photoUrl}" alt="Foto opera ${o['Codice']}" class="detail-photo">`
-        : `<p style="color:red">Foto non disponibile</p>`
-      }
+${photoUrl
+  ? `<img 
+       src="${photoUrl}" 
+       alt="Foto opera ${o['Codice']}" 
+       class="detail-photo"
+       crossOrigin="anonymous"
+       referrerpolicy="no-referrer"
+     >`
+  : `<p style="color:red">Foto non disponibile</p>`
+}
+
 
       <div class="descrizione"><strong>Descrizione:</strong> ${o['Descrizione']}</div>
       <div class="iscrizione"><strong>Iscrizione:</strong> ${o['Iscrizione']}</div>
