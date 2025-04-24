@@ -67,7 +67,7 @@ function renderCards(data) {
     const d = document.createElement('div');
     d.className = 'card';
     d.innerHTML = `
-      <h4>${o.Codice} - ${o.Sestiere} - ${o.Parrocchia} - ${o.Indirizzo}, ${o.Civico}</h4>
+      <h4>${o.Codice} – ${o.Sestiere} – ${o.Parrocchia} – ${o.Indirizzo}, ${o.Civico}</h4>
       <img src="${o['URL thumbnail']}" class="thumb">
     `;
     d.onclick = () => renderDetail(o);
@@ -77,18 +77,18 @@ function renderCards(data) {
 
 function renderDetail(o) {
   const content = document.getElementById('content');
-content.innerHTML = `
-  <button onclick="location.reload()">← Reset</button>
-  <h1>${o.Collocazione}</h1>
-  <img src="${o['URL foto']}" style="max-width:100%">
-  <p><strong>Data foto:</strong> ${o.dataFoto}</p>
-  <div id="map"></div>
-`;
-  const map = L.map('map').setView([o.Latitudine, o.Longitudine], 16);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  content.innerHTML = `
+    <button onclick="location.reload()">← Reset</button>
+    <h1>${o.Collocazione}</h1>
+    <img src="${o['URL foto']}" style="max-width:100%">
+    <p><strong>Descrizione:</strong> ${o.Descrizione}</p>
+    <div id="map"></div>
+  `;
+  const map = L.map('map').setView([parseFloat(o.Latitudine), parseFloat(o.Longitudine)], 16);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution:'&copy; OpenStreetMap'
   }).addTo(map);
-  L.marker([o.Latitudine, o.Longitudine]).addTo(map);
+  L.marker([parseFloat(o.Latitudine), parseFloat(o.Longitudine)]).addTo(map);
 }
 
 document.getElementById('search').oninput = (e) => {
