@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Catalogo Venezia Arte Pubblica</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
+  <style>
+    body { font-family: sans-serif; margin: 0; display: flex; height: 100vh; }
+    #sidebar { width: 250px; overflow-y: auto; border-right: 1px solid #ccc; padding: 1em; }
+    #main    { flex: 1; padding: 1em; overflow-y: auto; }
+    .menu-section h3 { margin-top: 1em; }
+    .card { border:1px solid #ddd; padding:0.5em; margin:0.5em 0; cursor: pointer; }
+    .thumb { max-width:100%; height:auto; }
+    #map   { height: 300px; margin-top: 1em; }
+  </style>
+</head>
+<body>
+  <div id="sidebar">
+    <div class="menu-section" id="menu-sestieri">
+      <h3>Sestieri</h3>
+      <ul id="list-sestieri"></ul>
+    </div>
+    <div class="menu-section" id="menu-parrocchie" style="display:none">
+      <h3>Parrocchie</h3>
+      <ul id="list-parrocchie"></ul>
+    </div>
+    <div class="menu-section" id="menu-indirizzi" style="display:none">
+      <h3>Indirizzi</h3>
+      <ul id="list-indirizzi"></ul>
+    </div>
+  </div>
+  <div id="main">
+    <input id="search" type="search" placeholder="Cerca..." style="width:100%;padding:0.5em">
+    <div id="content"></div>
+  </div>
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
