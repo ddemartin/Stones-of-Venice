@@ -90,7 +90,7 @@ function renderDetail(o) {
       <div class="title">${o['Codice']} – ${o['Sestiere']}</div>
       <div class="subtitle">${o['Indirizzo']}, ${o['Civico']}</div>
       <div class="collocazione">${o['Collocazione']}</div>
-      <div class="coords">${o['Coordinates WGS84']}</div>
+      <div class="coords">${o['Coordinate WGS84']}</div>
 
       ${photoUrl
         ? `<img src="${photoUrl}" alt="${o['Collocazione']}" class="detail-photo">`
@@ -108,6 +108,8 @@ function renderDetail(o) {
       <div class="note"><strong>Note:</strong> ${o['Note']}</div>
     </div>
   `;
+
+console.log('URL foto:', photoUrl);
 
   // Inizializza la mappa
   const lat = parseFloat(o['Latitudine']);
