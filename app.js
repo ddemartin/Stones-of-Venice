@@ -7,6 +7,9 @@ let currentMode = '';
 let selectedS = '';
 let selectedP = '';
 let selectedA = '';
+let currentList = [];
+let currentIndex = -1;
+
 
 // Evidenziazione dei termini trovati
 function highlight(text, term) {
@@ -195,6 +198,7 @@ function selectTipo(t, emitLink = true) {
 
 // Rende le card di elenco con titolo, sottotitolo e tipo
 function renderCards(data) {
+  currentList = data;
   clearContent();
   const content = document.getElementById('content'); if (!content) return;
   data.forEach(o => {
@@ -213,6 +217,11 @@ function renderCards(data) {
 function renderDetail(o) {
   const backBtn = document.getElementById('back-btn'); if (backBtn) backBtn.style.display = 'block';
   clearContent(); const content = document.getElementById('content');
+
+  // calcola l'indice nella lista corrente
+currentIndex = currentList.findIndex(item => item.Codice === o.Codice);
+updateNavButtons();
+
   const title    = highlight(`${o.Codice} – ${o.Sestiere}`, currentTerm);
   const subtitle = highlight(`${o.Indirizzo}, ${o.Civico}`, currentTerm);
   const type     = highlight(o.Tipo, currentTerm);
@@ -235,7 +244,7 @@ function renderDetail(o) {
       <div class="subtitle">${subtitle}</div>
       <div class="type">${type}</div>
       <div class="collocazione">${colloc}</div>
-      <img src="${proxyUrl}" class="detail-photo" loading="lazy" onerror="this.src='https://via.placeholder.com/600x400?text=Foto+non+disponibile'" />
+      <img src="${proxyUrl}" class="detail-photo" onerror="this.src='https://via.placeholder.com/600x400?text=Foto+non+disponibile'" />
       <div class="descrizione"><strong>Descrizione:</strong> ${descr}</div>
       <div class="iscrizione"><strong>Iscrizione:</strong> ${iscr}</div>
       <div class="condizioni"><strong>Condizioni:</strong> ${cond}</div>
@@ -249,3 +258,16 @@ function renderDetail(o) {
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ attribution: '&copy; OpenStreetMap' }).addTo(map);
   L.marker([lat, lng]).addTo(map);
 }
+function updateNavButtons() {
+  const prev = document.getElementById('prev-btn');
+  const next = document.getElementById('next-btn');
+  prev.disabled = currentIndex <= 0;
+  next.disabled = currentIndex >= currentList.length - 1;
+}
+
+document.getElementById('prev-btn').addEventListener('click', () => {
+  if (currentIndex > 0) renderDetail(currentList[currentIndex - 1]);
+});
+document.getElementById('next-btn').addEventListener('click', () => {
+  if (currentIndex < currentList.length - 1) renderDetail(currentList[currentIndex + 1]);
+});

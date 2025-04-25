@@ -87,6 +87,18 @@
     .detail-card .iscrizione, .detail-card .condizioni { font-style: italic; }
     .detail-card .bibliografia, .detail-card .datafoto, .detail-card .note { font-size: 0.95em; background: #f0f0f0; padding: 0.6em; border-radius: 4px; }
     #map { height: 400px; margin: 1em 0; border: 1px solid #ccc; border-radius: 4px; }
+    #nav-arrows button {
+  background: none;
+  border: none;
+  font-size: 1.2em;
+  cursor: pointer;
+  color: #007bff;
+}
+#nav-arrows button:disabled {
+  color: #ccc;
+  cursor: default;
+}
+  
   </style>
 
   <!-- Leaflet JS -->
@@ -110,6 +122,20 @@
       <div id="search-container">
         <input id="search" type="search" placeholder="Cerca..." />
       </div>
+
+      <!-- frecce di navigazione -->
+  <div id="nav-arrows" style="
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 1em;
+  margin-bottom: 1em;
+  flex: 0 0 auto;
+">
+<button id="prev-btn" disabled>← Precedente</button>
+<button id="next-btn" disabled>Successivo →</button>
+</div>
+
       <div id="content"></div>
     </div>
   </div>
