@@ -2,82 +2,102 @@
 <html lang="it">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Catalogo Venezia Arte Pubblica</title>
+  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
+
+  <!-- Tuo CSS personalizzato -->
   <style>
-    body { font-family: sans-serif; margin: 0; display: flex; height: 100vh; }
-    #sidebar { width: 270px; overflow-y: auto; border-right: 1px solid #ccc; padding: 1em; }
-    #main    { flex: 1; padding: 1em; overflow-y: auto; }
-    .menu-section h3 { margin-top: 1em; }
-    .card { border:1px solid #ddd; padding:0.5em; margin:0.5em 0; cursor: pointer; }
-    .thumb { max-width:100%; height:auto; }
-    #map   { height: 400px; margin-top: 1em; }
-.card {
-  border: 1px solid #ccc;
-  padding: 1em;
-  margin: 0.5em 0;
-  border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-.card .title {
-  font-size: 1.5em;
-  font-weight: bold;
-  margin-bottom: 0.5em;
-}
-.card .subtitle {
-  font-size: 1.25em;
-  margin-bottom: 0.5em;
-  color: #555;
-}
-.card .collocazione {
-  font-style: italic;
-  margin-bottom: 0.25em;
-}
-.card .coords {
-  font-size: 0.9em;
-  color: #777;
-  margin-bottom: 0.5em;
-}
-.card .descrizione {
-  margin-top: 0.5em;
-  line-height: 1.4;
-}
-.card .iscrizione {
-  margin-top: 0.5em;
-  line-height: 1.4;
-}
-.card .bibliografia {
-  font-size: 0.75em;
-  margin-top: 0.5em;
-  line-height: 1.0;
-}
-.card .note {
-  font-size: 0.75em;
-  margin-top: 0.5em;
-  line-height: 1.0;
-}
-.detail-photo {
-  border: 2px solid #ddd;
-  border-radius: 6px;
-  max-width: 100%;
-  height: auto;
-  display: block;
-  margin: 1em 0;
-}
-.detail-card .condizioni {
-  margin-top: 0.5em;
-  color: #555;
-}
-.detail-card .datafoto {
-  margin-top: 0.5em;
-  font-size: 0.9em;
-  color: #555;
-}
+    /* Container generale */
+    .card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      padding: 1em;
+      margin: 1em 0;
+      transition: transform .2s;
+    }
+    .card:hover {
+      transform: translateY(-4px);
+    }
 
+    /* Titolo principale */
+    .card .title {
+      font-size: 1.4em;          /* dimensione più grande */
+      font-weight: bold;         /* grassetto */
+      margin-bottom: 0.3em;
+      color: #333;
+    }
 
+    /* Sottotitolo */
+    .card .subtitle {
+      font-size: 1.1em;
+      color: #555;
+      margin-bottom: 0.6em;
+    }
+
+    /* Collocazione e coordinate */
+    .card .collocazione {
+      font-style: italic;
+      margin-bottom: 0.2em;
+      color: #666;
+    }
+    .card .coords {
+      font-size: 0.9em;
+      color: #999;
+      margin-bottom: 0.8em;
+    }
+
+    /* Immagine thumbnail/detail */
+    .card .thumb,
+    .detail-photo {
+      display: block;
+      width: 100%;
+      max-width: 600px;
+      height: auto;
+      margin: 1em 0;
+      border-radius: 4px;
+      object-fit: cover;
+    }
+
+    /* Testo descrizione e metadati */
+    .card .descrizione,
+    .card .iscrizione,
+    .card .condizioni,
+    .card .bibliografia,
+    .card .datafoto,
+    .card .note {
+      margin-top: 0.8em;
+      line-height: 1.5;
+      color: #444;
+    }
+    .card .iscrizione,
+    .card .condizioni {
+      font-style: italic;
+    }
+    .card .bibliografia,
+    .card .datafoto,
+    .card .note {
+      font-size: 0.9em;
+      color: #666;
+      background: #f9f9f9;
+      padding: 0.5em;
+      border-radius: 4px;
+    }
+
+    /* Vista dettaglio */
+    .detail-card {
+      max-width: 800px;
+      margin: auto;
+    }
   </style>
+
+  <!-- La tua app.js deve essere caricato dopo gli stili -->
+  <script src="app.js" defer></script>
 </head>
+
+
 <body>
   <div id="sidebar">
     <div class="menu-section" id="menu-sestieri">
