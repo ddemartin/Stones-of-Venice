@@ -2,14 +2,11 @@
 <html lang="it">
 <head>
   <meta charset="utf-8">
-  <title>Catalogo Venezia Arte Pubblica</title>
+  <title>Archivio fotografico delle sculture erratiche all'aperto di Venezia e della sua Laguna</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <!-- Leaflet CSS per la mappa -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-  />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
 
   <!-- Stili personalizzati -->
   <style>
@@ -17,15 +14,46 @@
       margin: 0;
       font-family: sans-serif;
       display: flex;
+      flex-direction: column;
       height: 100vh;
       overflow: hidden;
     }
+    /* Header */
+    header {
+      padding: 1em;
+      background: #fff;
+      border-bottom: 1px solid #ddd;
+      text-align: center;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.5em;
+      color: #222;
+    }
+    header p {
+      margin: 0.2em 0 0;
+      font-size: 1em;
+      color: #555;
+    }
+    /* Container principale sotto l'header */
+    #container {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+    /* Sidebar */
     #sidebar {
       flex: 0 0 250px;
       background: #fafafa;
       border-right: 1px solid #ddd;
       padding: 1em;
       overflow-y: auto;
+    }
+    /* Titolo menu sempre visibile */
+    .sidebar-header {
+      font-size: 1.2em;
+      font-weight: bold;
+      margin-bottom: 0.5em;
     }
     #main {
       flex: 1;
@@ -34,102 +62,56 @@
       overflow: hidden;
       padding: 1em;
     }
-    /* Barra indietro */
-    #back-container {
-      flex: 0 0 auto;
-      margin-bottom: 1em;
-    }
-    #back-btn {
-      background: none;
-      border: none;
-      color: #007bff;
-      font-size: 1em;
-      cursor: pointer;
-      padding: 0;
-    }
-    #back-btn:hover {
-      text-decoration: underline;
-    }
-    #search-container {
-      flex: 0 0 auto;
-      margin-bottom: 1em;
-    }
-    #search {
-      width: 100%;
-      padding: 0.5em;
-      font-size: 1em;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    #content {
-      flex: 1;
-      overflow-y: auto;
-    }
-    ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    ul li {
-      padding: 0.5em;
-      cursor: pointer;
-    }
-    ul li:hover {
-      background: #eaeaea;
-    }
-    .card {
-      background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      padding: 1em;
-      margin: 1em 0;
-      transition: transform .2s;
-      cursor: pointer;
-    }
+    #back-container { flex: 0 0 auto; margin: 1em 0; }
+    #back-btn { background: none; border: none; color: #007bff; font-size: 1em; cursor: pointer; padding: 0; }
+    #back-btn:hover { text-decoration: underline; }
+    #intro { margin-bottom: 1em; color: #555; }
+    #search-container { flex: 0 0 auto; margin-bottom: 1em; }
+    #search { width: 100%; padding: 0.5em; font-size: 1em; border: 1px solid #ccc; border-radius: 4px; }
+    #content { flex: 1; overflow-y: auto; }
+    ul { list-style: none; padding: 0; margin: 0; }
+    ul li { padding: 0.5em; cursor: pointer; }
+    ul li:hover { background: #eaeaea; }
+    .card { background: #fff; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); padding: 1em; margin: 1em 0; transition: transform .2s; cursor: pointer; }
     .card:hover { transform: translateY(-4px); }
-    .card .title,
-    .card .type { font-size: 1.4em; font-weight: bold; margin-bottom: 0.3em; color: #333; }
+    .card .title, .card .type { font-size: 1.4em; font-weight: bold; margin-bottom: 0.3em; color: #333; }
     .card .subtitle { font-size: 1.1em; color: #555; margin-bottom: 0.6em; }
     .card .collocazione { font-style: italic; margin-bottom: 0.5em; color: #666; }
     .card .descrizione { line-height: 1.5; color: #444; margin-top: 0.8em; }
     .detail-card { max-width: 800px; margin: auto; }
-    .detail-card .title,
-    .detail-card .type { font-size: 1.6em; font-weight: bold; margin-bottom: 0.4em; color: #222; }
+    .detail-card .title, .detail-card .type { font-size: 1.6em; font-weight: bold; margin-bottom: 0.4em; color: #222; }
     .detail-card .subtitle { font-size: 1.2em; color: #444; margin-bottom: 0.6em; }
     .detail-card .collocazione { font-style: italic; margin-bottom: 0.3em; color: #555; }
     .detail-card .detail-photo { display: block; width: 100%; max-width: 600px; margin: 1em 0; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); object-fit: cover; }
-    .detail-card .descrizione,
-    .detail-card .iscrizione,
-    .detail-card .condizioni,
-    .detail-card .bibliografia,
-    .detail-card .datafoto,
-    .detail-card .note { margin-top: 1em; line-height: 1.6; color: #333; }
-    .detail-card .iscrizione,
-    .detail-card .condizioni { font-style: italic; }
-    .detail-card .bibliografia,
-    .detail-card .datafoto,
-    .detail-card .note { font-size: 0.95em; background: #f0f0f0; padding: 0.6em; border-radius: 4px; }
+    .detail-card .descrizione, .detail-card .iscrizione, .detail-card .condizioni, .detail-card .bibliografia, .detail-card .datafoto, .detail-card .note { margin-top: 1em; line-height: 1.6; color: #333; }
+    .detail-card .iscrizione, .detail-card .condizioni { font-style: italic; }
+    .detail-card .bibliografia, .detail-card .datafoto, .detail-card .note { font-size: 0.95em; background: #f0f0f0; padding: 0.6em; border-radius: 4px; }
     #map { height: 400px; margin: 1em 0; border: 1px solid #ccc; border-radius: 4px; }
   </style>
 
   <!-- Leaflet JS -->
-  <script
-    src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
-    defer
-  ></script>
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body>
-  <div id="sidebar"></div>
-  <div id="main">
-    <div id="back-container">
-      <button id="back-btn" style="display:none;">← Torna indietro</button>
+  <header>
+    <h1>Archivio fotografico delle sculture erratiche all'aperto di Venezia e della sua Laguna</h1>
+    <p>A cura di Davide De Martin</p>
+  </header>
+  <div id="container">
+    <div id="sidebar">
+      <div class="sidebar-header">Menu di navigazione</div>
     </div>
-    <div id="search-container">
-      <input id="search" type="search" placeholder="Cerca..." />
+    <div id="main">
+      <div id="back-container">
+        <button id="back-btn" style="display:none;">← Torna indietro</button>
+      </div>
+      <div id="intro">Naviga l'archivio usando il menu a sinistra oppure cerca un'opera mediante la barra di ricerca qui sotto.</div>
+      <div id="search-container">
+        <input id="search" type="search" placeholder="Cerca..." />
+      </div>
+      <div id="content"></div>
     </div>
-    <div id="content"></div>
   </div>
 </body>
 </html>

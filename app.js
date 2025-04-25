@@ -4,66 +4,114 @@ const JSON_URL = 'https://script.google.com/macros/s/AKfycbyt2cEYGcsimAsPRB-tG2f
 let allData = [];
 let currentTerm = '';
 let currentMode = '';
+let selectedS = '';
+let selectedP = '';
+let selectedA = '';
 
 // Evidenziazione dei termini trovati
 function highlight(text, term) {
   if (!term) return text;
+  // Escape metacharacters per uso in RegExp
   const escaped = term.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&');
   const regex = new RegExp(`(${escaped})`, 'gi');
   return text.replace(regex, '<mark>$1</mark>');
 }
 
-// Inizializzazione: attendi caricamento DOM, poi setup
+// Formatta data ISO in GG mese AAAA (italiano)
+function formatDateISO(isoStr) {
+  const d = new Date(isoStr);
+  if (isNaN(d)) return isoStr;
+  const day = String(d.getDate()).padStart(2, '0');
+  const months = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
+  return `${day} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+// Renderizza link "Torna indietro" nel menu
+function renderBackLink() {
+  const backContainer = document.getElementById('sidebar-back');
+  backContainer.innerHTML = '';
+  if (!selectedS && !selectedP && !selectedA) return;
+  const link = document.createElement('a');
+  link.href = '#';
+  link.textContent = '← Torna indietro';
+  link.style.display = 'block';
+  link.style.marginBottom = '0.5em';
+  link.onclick = e => { e.preventDefault(); goBack(); };
+  backContainer.appendChild(link);
+}
+
+// Gestisce il ritorno al livello precedente
+function goBack() {
+  if (selectedA) {
+    selectedA = '';
+    selectParrocchia(selectedP, false);
+  } else if (selectedP) {
+    selectedP = '';
+    selectSestiere(selectedS, false);
+  } else if (selectedS) {
+    selectedS = '';
+    showModeMenu();
+  }
+}
+
+// Inizializza l'app al caricamento del DOM
 window.addEventListener('DOMContentLoaded', () => {
   const backBtn = document.getElementById('back-btn');
   if (backBtn) {
     backBtn.style.display = 'none';
-    backBtn.addEventListener('click', () => {
-      backBtn.style.display = 'none';
-      showModeMenu();
-    });
+    backBtn.onclick = () => showModeMenu();
   }
   fetchData();
 });
 
-// Fetch JSON e mostra menu iniziale
+// Fetch dei dati e mostra menu iniziale
 async function fetchData() {
   try {
     const res = await fetch(JSON_URL);
-    if (!res.ok) throw new Error(res.status + ' ' + res.statusText);
+    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
     allData = await res.json();
     showModeMenu();
   } catch (err) {
     console.error('Errore caricamento JSON:', err);
-    const sb = document.getElementById('sidebar');
-    if (sb) sb.innerHTML = '<p style="color:red">Impossibile caricare i dati.</p>';
+    document.getElementById('sidebar').innerHTML = '<p style="color:red">Impossibile caricare i dati.</p>';
   }
 }
 
-// Menu iniziale: scegli modalità
-function showModeMenu() {
-  document.getElementById('back-btn').style.display = 'none';
-  currentMode = '';
-  clearSidebar();
-  clearContent();
-  buildMenuList('sidebar', ['Sestiere', 'Tipo'], mode => selectMode(mode.toLowerCase()));
+// Pulisce il menu, mantenendo intestazione e container per il back link
+function clearSidebar() {
+  document.getElementById('sidebar').innerHTML =
+    '<div class="sidebar-header">Menu di navigazione</div>' +
+    '<div id="sidebar-back"></div>';
 }
 
-// Seleziona modalità e avvia flusso
+// Pulisce l'area dei contenuti
+function clearContent() {
+  document.getElementById('content').innerHTML = '';
+}
+
+// Mostra il menu iniziale (scelta Sestiere o Tipo)
+function showModeMenu() {
+  currentMode = '';
+  selectedS = selectedP = selectedA = '';
+  clearSidebar();
+  clearContent();
+  renderBackLink();
+  buildMenuList(['Sestiere', 'Tipo'], mode => selectMode(mode));
+}
+
+// Selezione della modalità di navigazione
 function selectMode(mode) {
   currentMode = mode;
-  document.getElementById('back-btn').style.display = 'none';
   clearSidebar();
   clearContent();
-  if (mode === 'sestiere') buildSestiereFlow();
-  else if (mode === 'tipo') buildTipoFlow();
+  renderBackLink();
+  if (mode === 'Sestiere') buildSestiereFlow();
+  else buildTipoFlow();
 }
 
-// Costruisce menu generico
-function buildMenuList(containerId, items, handler) {
-  const ctr = document.getElementById(containerId);
-  if (!ctr) return;
-  ctr.innerHTML = '';
+// Costruisce una lista di voci nel menu
+function buildMenuList(items, handler) {
+  const sidebar = document.getElementById('sidebar');
   const ul = document.createElement('ul');
   items.forEach(item => {
     const li = document.createElement('li');
@@ -71,69 +119,100 @@ function buildMenuList(containerId, items, handler) {
     li.onclick = () => handler(item);
     ul.appendChild(li);
   });
-  ctr.appendChild(ul);
+  sidebar.appendChild(ul);
+  renderBackLink();
 }
 
 // Flusso Sestiere → Parrocchia → Indirizzo
 function buildSestiereFlow() {
   renderCards(allData);
+  clearSidebar();
+  clearSidebar();
   const sestieri = [...new Set(allData.map(o => o.Sestiere))].sort();
-  buildMenuList('sidebar', sestieri, selectSestiere);
+  buildMenuList(sestieri, selectSestiere);
 }
-function selectSestiere(s) {
-  renderCards(allData.filter(o => o.Sestiere === s));
+
+function selectSestiere(s, emitLink = true) {
+  selectedS = s; selectedP = selectedA = '';
+  clearSidebar();
+  const sb = document.getElementById('sidebar');
+  const title = document.createElement('div'); title.className = 'sidebar-selected';
+  title.innerHTML = `<strong>${selectedS}</strong><div>Ora scegli tra le parrocchie</div>`;
+  sb.appendChild(title);
+  renderBackLink();
   const filtered = allData.filter(o => o.Sestiere === s);
-  const parrocchie = [...new Set(filtered.map(o => o.Parrocchia))].sort();
-  buildMenuList('sidebar', parrocchie, selectParrocchia);
+  renderCards(filtered);
+  buildMenuList([...new Set(filtered.map(o=>o.Parrocchia))].sort(), selectParrocchia);
 }
-function selectParrocchia(p) {
-  renderCards(allData.filter(o => o.Parrocchia === p));
+
+function selectParrocchia(p, emitLink = true) {
+  selectedP = p; selectedA = '';
+  clearSidebar();
+  const sb = document.getElementById('sidebar');
+  const selS = document.createElement('div'); selS.className = 'sidebar-selected'; selS.textContent = selectedS;
+  const title = document.createElement('div'); title.className = 'sidebar-selected';
+  title.innerHTML = `<strong>${selectedP}</strong><div>Ora scegli tra gli indirizzi</div>`;
+  sb.appendChild(selS);
+  sb.appendChild(title);
+  renderBackLink();
   const filtered = allData.filter(o => o.Parrocchia === p);
-  const indirizzi = [...new Set(filtered.map(o => o.Indirizzo))].sort();
-  buildMenuList('sidebar', indirizzi, selectIndirizzo);
+  renderCards(filtered);
+  buildMenuList([...new Set(filtered.map(o=>o.Indirizzo))].sort(), selectIndirizzo);
 }
-function selectIndirizzo(a) {
-  renderCards(allData.filter(o => o.Indirizzo === a));
+
+function selectIndirizzo(a, emitLink = true) {
+  selectedA = a;
+  clearSidebar();
+  const sb = document.getElementById('sidebar');
+  const selS = document.createElement('div'); selS.className = 'sidebar-selected'; selS.textContent = selectedS;
+  const selP = document.createElement('div'); selP.className = 'sidebar-selected'; selP.textContent = selectedP;
+  const title = document.createElement('div'); title.className = 'sidebar-selected'; title.textContent = selectedA;
+  sb.appendChild(selS);
+  sb.appendChild(selP);
+  sb.appendChild(title);
+  renderBackLink();
+  const filtered = allData.filter(o => o.Indirizzo === a);
+  renderCards(filtered);
 }
 
 // Flusso Tipo di opera
 function buildTipoFlow() {
   renderCards(allData);
+  clearSidebar();
   const tipi = [...new Set(allData.map(o => o.Tipo))].sort();
-  buildMenuList('sidebar', tipi, selectTipo);
+  buildMenuList(tipi, selectTipo);
 }
-function selectTipo(t) {
+
+function selectTipo(t, emitLink = true) {
+  clearSidebar();
+  const sb = document.getElementById('sidebar');
+  const title = document.createElement('div'); title.className = 'sidebar-selected';
+  title.innerHTML = `<strong>${t}</strong><div>Ora scegli le opere</div>`;
+  sb.appendChild(title);
+  renderBackLink();
   renderCards(allData.filter(o => o.Tipo === t));
 }
 
-// Render elenco card
+// Rende le card di elenco con titolo, sottotitolo e tipo
 function renderCards(data) {
   clearContent();
-  const content = document.getElementById('content');
-  if (!content) return;
+  const content = document.getElementById('content'); if (!content) return;
   data.forEach(o => {
-    const card = document.createElement('div');
-    card.className = 'card';
+    const card = document.createElement('div'); card.className = 'card';
     card.innerHTML = `
       <div class="title">${highlight(`${o.Codice} – ${o.Sestiere}`, currentTerm)}</div>
       <div class="subtitle">${highlight(`${o.Indirizzo}, ${o.Civico}`, currentTerm)}</div>
       <div class="type">${highlight(o.Tipo, currentTerm)}</div>
-      <div class="collocazione">${highlight(o.Collocazione, currentTerm)}</div>
-      <div class="descrizione">${highlight(o.Descrizione, currentTerm)}</div>
     `;
     card.onclick = () => renderDetail(o);
     content.appendChild(card);
   });
 }
 
-// Render dettaglio card
+// Rende la vista dettaglio senza cancellare il menu
 function renderDetail(o) {
-  const backBtn = document.getElementById('back-btn');
-  if (backBtn) backBtn.style.display = 'block';
-  clearSidebar();
-  clearContent();
-  const content = document.getElementById('content');
-
+  const backBtn = document.getElementById('back-btn'); if (backBtn) backBtn.style.display = 'block';
+  clearContent(); const content = document.getElementById('content');
   const title    = highlight(`${o.Codice} – ${o.Sestiere}`, currentTerm);
   const subtitle = highlight(`${o.Indirizzo}, ${o.Civico}`, currentTerm);
   const type     = highlight(o.Tipo, currentTerm);
@@ -142,15 +221,13 @@ function renderDetail(o) {
   const iscr     = highlight(o.Iscrizione, currentTerm);
   const cond     = highlight(o.Conservazione, currentTerm);
   const bibl     = highlight(o.Bibliografia, currentTerm);
-  const dataFoto = highlight(o['Data miglior foto'], currentTerm);
+  const isoDate  = o['Data miglior foto'] || '';
+  const dataFoto = highlight(isoDate ? formatDateISO(isoDate) : '', currentTerm);
   const notes    = highlight(o.Note, currentTerm);
-
-  const rawUrl    = o['URL foto'] || '';
-  const photoUrl  = rawUrl.replace(/^"+|"+$/g, '').trim();
-  const cleanUrl  = photoUrl.replace(/^https?:\/\//, '');
-  const proxyUrl  = 'https://images.weserv.nl/?url=' + encodeURIComponent(cleanUrl);
-  const lat       = parseFloat(o.Latitudine);
-  const lng       = parseFloat(o.Longitudine);
+  const rawUrl   = o['URL foto'] || '';
+  const proxyUrl = 'https://images.weserv.nl/?url=' + encodeURIComponent(rawUrl.replace(/^"+|"+$/g,'').replace(/^https?:\/\//,''));
+  const lat      = parseFloat(o.Latitudine);
+  const lng      = parseFloat(o.Longitudine);
 
   content.innerHTML = `
     <div class="detail-card">
@@ -168,29 +245,7 @@ function renderDetail(o) {
       <div class="note"><strong>Note:</strong> ${notes}</div>
     </div>
   `;
-
   const map = L.map('map').setView([lat, lng], 16);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ attribution: '&copy; OpenStreetMap' }).addTo(map);
   L.marker([lat, lng]).addTo(map);
 }
-
-// Utility per pulire sidebar e content
-function clearSidebar() {
-  const sb = document.getElementById('sidebar'); if (sb) sb.innerHTML = '';
-}
-function clearContent() {
-  const ct = document.getElementById('content'); if (ct) ct.innerHTML = '';
-}
-
-// Barra di ricerca con debounce
-const searchInput = document.getElementById('search');
-let debounceTimeout;
-searchInput.addEventListener('input', e => {
-  clearTimeout(debounceTimeout);
-  debounceTimeout = setTimeout(() => {
-    currentTerm = e.target.value.trim().toLowerCase();
-    if (!currentTerm) return showModeMenu();
-    const results = allData.filter(r => Object.values(r).some(v => v && v.toString().toLowerCase().includes(currentTerm)));
-    renderCards(results);
-  }, 100);
-});
