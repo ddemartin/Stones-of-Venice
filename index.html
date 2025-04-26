@@ -16,7 +16,8 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
-      overflow: hidden;
+      overflow: auto;
+      text-align: left;
     }
     /* Header */
     header {
@@ -39,7 +40,7 @@
     #container {
       flex: 1;
       display: flex;
-      overflow: hidden;
+      overflow: auto;
     }
     /* Sidebar */
     #sidebar {
@@ -48,6 +49,7 @@
       border-right: 1px solid #ddd;
       padding: 1em;
       overflow-y: auto;
+      text-align: left;
     }
     /* Titolo menu sempre visibile */
     .sidebar-header {
@@ -59,46 +61,136 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
+      overflow: auto;
       padding: 1em;
+      text-align: left;
     }
     #back-container { flex: 0 0 auto; margin: 1em 0; }
-    #back-btn { background: none; border: none; color: #007bff; font-size: 1em; cursor: pointer; padding: 0; }
+    #back-btn {
+      background: none;
+      border: none;
+      color: #007bff;
+      font-size: 1em;
+      cursor: pointer;
+      padding: 0;
+    }
     #back-btn:hover { text-decoration: underline; }
     #intro { margin-bottom: 1em; color: #555; }
     #search-container { flex: 0 0 auto; margin-bottom: 1em; }
-    #search { width: 100%; padding: 0.5em; font-size: 1em; border: 1px solid #ccc; border-radius: 4px; }
-    #content { flex: 1; overflow-y: auto; }
+    #search {
+      width: 100%;
+      padding: 0.5em;
+      font-size: 1em;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    /* frecce di navigazione */
+    #nav-arrows {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 1em;
+      margin-bottom: 1em;
+      flex: 0 0 auto;
+    }
+    #nav-arrows button {
+      background: none;
+      border: none;
+      font-size: 1.2em;
+      cursor: pointer;
+      color: #007bff;
+    }
+    #nav-arrows button:disabled {
+      color: #ccc;
+      cursor: default;
+    }
+    #content {
+      flex: 1;
+      overflow-y: auto;
+      text-align: left;
+    }
     ul { list-style: none; padding: 0; margin: 0; }
     ul li { padding: 0.5em; cursor: pointer; }
     ul li:hover { background: #eaeaea; }
-    .card { background: #fff; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); padding: 1em; margin: 1em 0; transition: transform .2s; cursor: pointer; }
+    .card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      padding: 1em;
+      margin: 1em 0;
+      transition: transform .2s;
+      cursor: pointer;
+    }
     .card:hover { transform: translateY(-4px); }
-    .card .title, .card .type { font-size: 1.4em; font-weight: bold; margin-bottom: 0.3em; color: #333; }
-    .card .subtitle { font-size: 1.1em; color: #555; margin-bottom: 0.6em; }
-    .card .collocazione { font-style: italic; margin-bottom: 0.5em; color: #666; }
-    .card .descrizione { line-height: 1.5; color: #444; margin-top: 0.8em; }
-    .detail-card { max-width: 800px; margin: auto; }
-    .detail-card .title, .detail-card .type { font-size: 1.6em; font-weight: bold; margin-bottom: 0.4em; color: #222; }
-    .detail-card .subtitle { font-size: 1.2em; color: #444; margin-bottom: 0.6em; }
-    .detail-card .collocazione { font-style: italic; margin-bottom: 0.3em; color: #555; }
-    .detail-card .detail-photo { display: block; width: 100%; max-width: 600px; margin: 1em 0; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); object-fit: cover; }
-    .detail-card .descrizione, .detail-card .iscrizione, .detail-card .condizioni, .detail-card .bibliografia, .detail-card .datafoto, .detail-card .note { margin-top: 1em; line-height: 1.6; color: #333; }
+    .card .title, .card .type {
+      font-size: 1.2m;
+      font-weight: bold;
+      margin-bottom: 0.3em;
+      color: #333;
+    }
+    .card .subtitle {
+      font-size: 1.0em;
+      color: #555;
+      margin-bottom: 0.6em;
+    }
+    .card .collocazione {
+      font-style: italic;
+      margin-bottom: 0.5em;
+      color: #666;
+    }
+    .card .descrizione {
+      line-height: 1.5;
+      color: #444;
+      margin-top: 0.8em;
+    }
+    .detail-card {
+      max-width: 800px;
+      margin: 1em 0;
+      text-align: left;
+    }
+    .detail-card .title, .detail-card .type {
+      font-size: 1.4em;
+      font-weight: bold;
+      margin-bottom: 0.4em;
+      color: #af1919;
+    }
+    .detail-card .subtitle {
+      font-size: 1.1em;
+      color: #444;
+      margin-bottom: 0.6em;
+    }
+    .detail-card .collocazione {
+      font-style: italic;
+      margin-bottom: 0.3em;
+      color: #444;
+    }
+    /* Nuovi campi dettaglio */
+    .detail-card .coords { font-size: 1em; color: #444; margin-bottom: 0.8em; }
+    .detail-card .datazione { font-size: 1em; color: #444; margin-bottom: 0.5em; }
+    .detail-card .materiale { font-size: 1em; color: #444; margin-bottom: 0.5em; }
+    .detail-card .dimensioni { font-size: 1em; color: #444; margin-bottom: 1em; }
+    .detail-card .detail-photo {
+      display: block;
+      width: 100%;
+      max-width: 600px;
+      margin: 1em 0;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      object-fit: cover;
+    }
+    .detail-card .descrizione, .detail-card .iscrizione, .detail-card .condizioni, .detail-card .bibliografia, .detail-card .datafoto, .detail-card .note {
+      margin-top: 1em;
+      line-height: 1.6;
+      color: #444;
+    }
     .detail-card .iscrizione, .detail-card .condizioni { font-style: italic; }
-    .detail-card .bibliografia, .detail-card .datafoto, .detail-card .note { font-size: 0.95em; background: #f0f0f0; padding: 0.6em; border-radius: 4px; }
+    .detail-card .bibliografia, .detail-card .datafoto, .detail-card .note {
+      font-size: 0.95em;
+      padding: 0.6em;
+      border-radius: 4px;
+    }
     #map { height: 400px; margin: 1em 0; border: 1px solid #ccc; border-radius: 4px; }
-    #nav-arrows button {
-  background: none;
-  border: none;
-  font-size: 1.2em;
-  cursor: pointer;
-  color: #007bff;
-}
-#nav-arrows button:disabled {
-  color: #ccc;
-  cursor: default;
-}
-  
   </style>
 
   <!-- Leaflet JS -->
@@ -110,9 +202,11 @@
     <h1>Archivio fotografico delle sculture erratiche all'aperto di Venezia e della sua Laguna</h1>
     <p>A cura di Davide De Martin</p>
   </header>
+  
   <div id="container">
     <div id="sidebar">
       <div class="sidebar-header">Menu di navigazione</div>
+      <div id="sidebar-back"></div>
     </div>
     <div id="main">
       <div id="back-container">
@@ -139,5 +233,4 @@
       <div id="content"></div>
     </div>
   </div>
-</body>
 </html>

@@ -10,11 +10,9 @@ let selectedA = '';
 let currentList = [];
 let currentIndex = -1;
 
-
 // Evidenziazione dei termini trovati
 function highlight(text, term) {
   if (!term) return text;
-  // Escape metacharacters per uso in RegExp
   const escaped = term.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&');
   const regex = new RegExp(`(${escaped})`, 'gi');
   return text.replace(regex, '<mark>$1</mark>');
@@ -218,16 +216,16 @@ function renderDetail(o) {
   const backBtn = document.getElementById('back-btn'); if (backBtn) backBtn.style.display = 'block';
   clearContent(); const content = document.getElementById('content');
 
-  // calcola l'indice nella lista corrente
-currentIndex = currentList.findIndex(item => item.Codice === o.Codice);
-updateNavButtons();
+  // Aggiorna indice e btn nav
+  currentIndex = currentList.findIndex(item => item.Codice === o.Codice);
+  updateNavButtons();
 
   const title    = highlight(`${o.Codice} – ${o.Sestiere}`, currentTerm);
   const subtitle = highlight(`${o.Indirizzo}, ${o.Civico}`, currentTerm);
   const type     = highlight(o.Tipo, currentTerm);
   const colloc   = highlight(o.Collocazione, currentTerm);
   const descr    = highlight(o.Descrizione, currentTerm);
-  const iscr     = highlight(o.Iscrizione, currentTerm);
+  const iscr     = highlight(o.Iscrizione || 'Nessuna.', currentTerm);
   const cond     = highlight(o.Conservazione, currentTerm);
   const bibl     = highlight(o.Bibliografia, currentTerm);
   const isoDate  = o['Data miglior foto'] || '';
@@ -242,9 +240,13 @@ updateNavButtons();
     <div class="detail-card">
       <div class="title">${title}</div>
       <div class="subtitle">${subtitle}</div>
-      <div class="type">${type}</div>
       <div class="collocazione">${colloc}</div>
+      <div class="coords"><strong>Coordinate:</strong> ${o['Coordinate WGS84'] || ''}</div>
+      <div class="type">${type}</div>
       <img src="${proxyUrl}" class="detail-photo" onerror="this.src='https://via.placeholder.com/600x400?text=Foto+non+disponibile'" />
+      <div class="datazione"><strong>Datazione:</strong> ${o.Datazione || ''}</div>
+      <div class="materiale"><strong>Materiale:</strong> ${o.Materiale || ''}</div>
+      <div class="dimensioni"><strong>Dimensioni cm:</strong> ${o['Dimensioni cm'] || ''}</div>
       <div class="descrizione"><strong>Descrizione:</strong> ${descr}</div>
       <div class="iscrizione"><strong>Iscrizione:</strong> ${iscr}</div>
       <div class="condizioni"><strong>Condizioni:</strong> ${cond}</div>
@@ -252,12 +254,14 @@ updateNavButtons();
       <div class="bibliografia"><strong>Bibliografia:</strong> ${bibl}</div>
       <div class="datafoto"><strong>Data foto:</strong> ${dataFoto}</div>
       <div class="note"><strong>Note:</strong> ${notes}</div>
-    </div>
+      </div>
   `;
+
   const map = L.map('map').setView([lat, lng], 16);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ attribution: '&copy; OpenStreetMap' }).addTo(map);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ attribution:'&copy; OpenStreetMap' }).addTo(map);
   L.marker([lat, lng]).addTo(map);
 }
+
 function updateNavButtons() {
   const prev = document.getElementById('prev-btn');
   const next = document.getElementById('next-btn');
