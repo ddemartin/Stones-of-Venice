@@ -1,6 +1,10 @@
 // URL del deployment Apps Script JSON
 const JSON_URL = 'https://script.google.com/macros/s/AKfycbyt2cEYGcsimAsPRB-tG2fCy-qDCkMvqV5QZmI1pV5r0VLE2L4a571PaYwa7S-o4SnY/exec';
 
+// Base URL per le immagini (raw.githubusercontent per bypassare limite 50MB jsDelivr)
+const BASE_PHOTO_URL = 'https://raw.githubusercontent.com/ddemartin/venezia-arte-pubblica/main/photos/';
+const BASE_THUMB_URL = 'https://raw.githubusercontent.com/ddemartin/venezia-arte-pubblica/main/thumbs/';
+
 let allData = [];
 let currentTerm = '';
 let currentMode = '';
@@ -9,6 +13,13 @@ let selectedP = '';
 let selectedA = '';
 let currentList = [];
 let currentIndex = -1;
+
+// Definisce il nome file delle immagini in base a Codice e Data del foglio
+function getImageFilename(o) {
+  const datePart = (o['Data miglior foto'] || '').slice(0, 10);
+  // Costruisce il nome con lo spazio dopo il punto: "Codice. YYYY-MM-DD.jpg"
+  return `${o.Codice}. ${datePart}.jpg`;
+}
 
 // Evidenziazione dei termini trovati
 function highlight(text, term) {
@@ -45,10 +56,10 @@ function renderBackLink() {
 function goBack() {
   if (selectedA) {
     selectedA = '';
-    selectParrocchia(selectedP, false);
+    selectParrocchia(selectedP);
   } else if (selectedP) {
     selectedP = '';
-    selectSestiere(selectedS, false);
+    selectSestiere(selectedS);
   } else if (selectedS) {
     selectedS = '';
     showModeMenu();
@@ -65,7 +76,7 @@ window.addEventListener('DOMContentLoaded', () => {
   fetchData();
 });
 
-// Fetch dei dati e mostra menu iniziale
+// Fetch dei dati e avvio del menu iniziale
 async function fetchData() {
   try {
     const res = await fetch(JSON_URL);
@@ -78,11 +89,10 @@ async function fetchData() {
   }
 }
 
-// Pulisce il menu, mantenendo intestazione e container per il back link
+// Pulisce il menu finale
 function clearSidebar() {
   document.getElementById('sidebar').innerHTML =
-    '<div class="sidebar-header">Menu di navigazione</div>' +
-    '<div id="sidebar-back"></div>';
+    '<div class="sidebar-header">Menu di navigazione</div><div id="sidebar-back"></div>';
 }
 
 // Pulisce l'area dei contenuti
@@ -90,17 +100,17 @@ function clearContent() {
   document.getElementById('content').innerHTML = '';
 }
 
-// Mostra il menu iniziale (scelta Sestiere o Tipo)
+// Mostra il menu iniziale: scelta tra Sestiere e Tipo
 function showModeMenu() {
   currentMode = '';
   selectedS = selectedP = selectedA = '';
   clearSidebar();
   clearContent();
   renderBackLink();
-  buildMenuList(['Sestiere', 'Tipo'], mode => selectMode(mode));
+  buildMenuList(['Sestiere', 'Tipo'], selectMode);
 }
 
-// Selezione della modalità di navigazione
+// Seleziona la modalità di navigazione
 function selectMode(mode) {
   currentMode = mode;
   clearSidebar();
@@ -110,7 +120,7 @@ function selectMode(mode) {
   else buildTipoFlow();
 }
 
-// Costruisce una lista di voci nel menu
+// Costruisce un menu di voci nel sidebar
 function buildMenuList(items, handler) {
   const sidebar = document.getElementById('sidebar');
   const ul = document.createElement('ul');
@@ -128,26 +138,28 @@ function buildMenuList(items, handler) {
 function buildSestiereFlow() {
   renderCards(allData);
   clearSidebar();
-  clearSidebar();
   const sestieri = [...new Set(allData.map(o => o.Sestiere))].sort();
   buildMenuList(sestieri, selectSestiere);
 }
 
-function selectSestiere(s, emitLink = true) {
-  selectedS = s; selectedP = selectedA = '';
+function selectSestiere(s) {
+  selectedS = s;
+  selectedP = selectedA = '';
   clearSidebar();
   const sb = document.getElementById('sidebar');
-  const title = document.createElement('div'); title.className = 'sidebar-selected';
+  const title = document.createElement('div');
+  title.className = 'sidebar-selected';
   title.innerHTML = `<strong>${selectedS}</strong><div>Ora scegli tra le parrocchie</div>`;
   sb.appendChild(title);
   renderBackLink();
   const filtered = allData.filter(o => o.Sestiere === s);
   renderCards(filtered);
-  buildMenuList([...new Set(filtered.map(o=>o.Parrocchia))].sort(), selectParrocchia);
+  buildMenuList([...new Set(filtered.map(o => o.Parrocchia))].sort(), selectParrocchia);
 }
 
-function selectParrocchia(p, emitLink = true) {
-  selectedP = p; selectedA = '';
+function selectParrocchia(p) {
+  selectedP = p;
+  selectedA = '';
   clearSidebar();
   const sb = document.getElementById('sidebar');
   const selS = document.createElement('div'); selS.className = 'sidebar-selected'; selS.textContent = selectedS;
@@ -158,10 +170,10 @@ function selectParrocchia(p, emitLink = true) {
   renderBackLink();
   const filtered = allData.filter(o => o.Parrocchia === p);
   renderCards(filtered);
-  buildMenuList([...new Set(filtered.map(o=>o.Indirizzo))].sort(), selectIndirizzo);
+  buildMenuList([...new Set(filtered.map(o => o.Indirizzo))].sort(), selectIndirizzo);
 }
 
-function selectIndirizzo(a, emitLink = true) {
+function selectIndirizzo(a) {
   selectedA = a;
   clearSidebar();
   const sb = document.getElementById('sidebar');
@@ -184,7 +196,7 @@ function buildTipoFlow() {
   buildMenuList(tipi, selectTipo);
 }
 
-function selectTipo(t, emitLink = true) {
+function selectTipo(t) {
   clearSidebar();
   const sb = document.getElementById('sidebar');
   const title = document.createElement('div'); title.className = 'sidebar-selected';
@@ -194,17 +206,20 @@ function selectTipo(t, emitLink = true) {
   renderCards(allData.filter(o => o.Tipo === t));
 }
 
-// Rende le card di elenco con titolo, sottotitolo e tipo
+// Rende le card di elenco con thumbnail
 function renderCards(data) {
   currentList = data;
   clearContent();
   const content = document.getElementById('content'); if (!content) return;
   data.forEach(o => {
     const card = document.createElement('div'); card.className = 'card';
+    const filename = getImageFilename(o);
+    const thumbUrl = BASE_THUMB_URL + encodeURIComponent(filename);
     card.innerHTML = `
       <div class="title">${highlight(`${o.Codice} – ${o.Sestiere}`, currentTerm)}</div>
       <div class="subtitle">${highlight(`${o.Indirizzo}, ${o.Civico}`, currentTerm)}</div>
       <div class="type">${highlight(o.Tipo, currentTerm)}</div>
+      <img src="${thumbUrl}" class="thumb" alt="Anteprima ${o.Codice}">
     `;
     card.onclick = () => renderDetail(o);
     content.appendChild(card);
@@ -215,11 +230,8 @@ function renderCards(data) {
 function renderDetail(o) {
   const backBtn = document.getElementById('back-btn'); if (backBtn) backBtn.style.display = 'block';
   clearContent(); const content = document.getElementById('content');
-
-  // Aggiorna indice e btn nav
   currentIndex = currentList.findIndex(item => item.Codice === o.Codice);
   updateNavButtons();
-
   const title    = highlight(`${o.Codice} – ${o.Sestiere}`, currentTerm);
   const subtitle = highlight(`${o.Indirizzo}, ${o.Civico}`, currentTerm);
   const type     = highlight(o.Tipo, currentTerm);
@@ -231,37 +243,36 @@ function renderDetail(o) {
   const isoDate  = o['Data miglior foto'] || '';
   const dataFoto = highlight(isoDate ? formatDateISO(isoDate) : '', currentTerm);
   const notes    = highlight(o.Note, currentTerm);
-  const rawUrl   = o['URL foto'] || '';
-  const proxyUrl = 'https://images.weserv.nl/?url=' + encodeURIComponent(rawUrl.replace(/^"+|"+$/g,'').replace(/^https?:\/\//,''));
+  const filename = getImageFilename(o);
+  const photoUrl = BASE_PHOTO_URL + encodeURIComponent(filename);
   const lat      = parseFloat(o.Latitudine);
   const lng      = parseFloat(o.Longitudine);
-
   content.innerHTML = `
     <div class="detail-card">
       <div class="title">${title}</div>
       <div class="subtitle">${subtitle}</div>
-      <div class="collocazione">${colloc}</div>
-      <div class="coords"><strong>Coordinate:</strong> ${o['Coordinate WGS84'] || ''}</div>
       <div class="type">${type}</div>
-      <img src="${proxyUrl}" class="detail-photo" onerror="this.src='https://via.placeholder.com/600x400?text=Foto+non+disponibile'" />
+      <div class="collocazione">${colloc}</div>
+      <div class="coords"><strong>Coordinate WGS84:</strong> ${o['Coordinate WGS84'] || ''}</div>
       <div class="datazione"><strong>Datazione:</strong> ${o.Datazione || ''}</div>
       <div class="materiale"><strong>Materiale:</strong> ${o.Materiale || ''}</div>
       <div class="dimensioni"><strong>Dimensioni cm:</strong> ${o['Dimensioni cm'] || ''}</div>
+      <img src="${photoUrl}" class="detail-photo" onerror="this.src='https://via.placeholder.com/600x400?text=Foto+non+disponibile'" />
       <div class="descrizione"><strong>Descrizione:</strong> ${descr}</div>
       <div class="iscrizione"><strong>Iscrizione:</strong> ${iscr}</div>
       <div class="condizioni"><strong>Condizioni:</strong> ${cond}</div>
-      <div id="map"></div>
       <div class="bibliografia"><strong>Bibliografia:</strong> ${bibl}</div>
       <div class="datafoto"><strong>Data foto:</strong> ${dataFoto}</div>
       <div class="note"><strong>Note:</strong> ${notes}</div>
-      </div>
+      <div id="map"></div>
+    </div>
   `;
-
   const map = L.map('map').setView([lat, lng], 16);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ attribution:'&copy; OpenStreetMap' }).addTo(map);
   L.marker([lat, lng]).addTo(map);
 }
 
+// Aggiorna lo stato dei pulsanti di navigazione
 function updateNavButtons() {
   const prev = document.getElementById('prev-btn');
   const next = document.getElementById('next-btn');
