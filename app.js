@@ -210,26 +210,17 @@ function renderCards(data) {
   currentList = data;
   clearContent();
   const content = document.getElementById('content');
-  
+
   data.forEach(o => {
     const card = document.createElement('div');
     card.className = 'card';
-    
-    const filename = getImageFilename(o);
-    const thumbUrl = BASE_THUMB_URL + filename;
-    
-    // Debug: verifica l'URL generato
-    console.log("Trying to load:", thumbUrl);
-    
-    card.innerHTML = `
+
+   card.innerHTML = `
       <div class="title">${highlight(`${o.Codice} – ${o.Sestiere}`, currentTerm)}</div>
       <div class="subtitle">${highlight(`${o.Indirizzo}, ${o.Civico}`, currentTerm)}</div>
       <div class="type">${highlight(o.Tipo, currentTerm)}</div>
-      <img src="${thumbUrl}" 
-           class="thumb" 
-           alt="Anteprima ${o.Codice}"
-           onerror="this.src='placeholder.jpg';this.onerror=null;">`;
-    
+    `;
+
     card.onclick = () => renderDetail(o);
     content.appendChild(card);
   });
