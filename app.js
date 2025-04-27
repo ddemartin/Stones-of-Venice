@@ -2,8 +2,8 @@
 const JSON_URL = 'https://script.google.com/macros/s/AKfycbyt2cEYGcsimAsPRB-tG2fCy-qDCkMvqV5QZmI1pV5r0VLE2L4a571PaYwa7S-o4SnY/exec';
 
 // Base URL per le immagini (raw.githubusercontent per bypassare limite 50MB jsDelivr)
-const BASE_PHOTO_URL = 'https://raw.githubusercontent.com/ddemartin/venezia-arte-pubblica/main/photos/';
-const BASE_THUMB_URL = 'https://raw.githubusercontent.com/ddemartin/venezia-arte-pubblica/main/thumbs/';
+const BASE_PHOTO_URL = 'https://ddemartin.github.io/venezia-arte-pubblica/assets/images/';
+const BASE_THUMB_URL = 'https://ddemartin.github.io/venezia-arte-pubblica/assets/thumbs/';
 
 let allData = [];
 let currentTerm = '';
@@ -17,8 +17,7 @@ let currentIndex = -1;
 // Definisce il nome file delle immagini in base a Codice e Data del foglio
 function getImageFilename(o) {
   const datePart = (o['Data miglior foto'] || '').slice(0, 10);
-  // Costruisce il nome con lo spazio dopo il punto: "Codice. YYYY-MM-DD.jpg"
-  return `${o.Codice}. ${datePart}.jpg`;
+  return encodeURIComponent(`${o.Codice}. ${datePart}.jpg`);
 }
 
 // Evidenziazione dei termini trovati
@@ -208,6 +207,20 @@ function selectTipo(t) {
 
 // Rende le card di elenco con thumbnail
 function renderCards(data) {
+  console.log("Dati immagini:", data.slice(0, 3)); // Mostra i primi 3 elementi
+  
+  data.forEach(o => {
+    const filename = getImageFilename(o);
+    console.log("Nome file generato:", filename);
+    console.log("URL completo:", BASE_THUMB_URL + filename);
+    
+    // Testa il caricamento dell'immagine
+    const testImg = new Image();
+    testImg.onload = () => console.log("Immagine caricabile:", filename);
+    testImg.onerror = () => console.error("Errore caricamento:", filename);
+    testImg.src = BASE_THUMB_URL + filename;
+  });
+  
   currentList = data;
   clearContent();
   const content = document.getElementById('content'); if (!content) return;
@@ -257,7 +270,11 @@ function renderDetail(o) {
       <div class="datazione"><strong>Datazione:</strong> ${o.Datazione || ''}</div>
       <div class="materiale"><strong>Materiale:</strong> ${o.Materiale || ''}</div>
       <div class="dimensioni"><strong>Dimensioni cm:</strong> ${o['Dimensioni cm'] || ''}</div>
-      <img src="${photoUrl}" class="detail-photo" onerror="this.src='https://via.placeholder.com/600x400?text=Foto+non+disponibile'" />
+      <img
+       src="${photoUrl}"
+       class="detail-photo"
+       onerror="this.onerror=null; this.src='/venezia-arte-pubblica/assets/images/placeholder.jpg';"
+      />
       <div class="descrizione"><strong>Descrizione:</strong> ${descr}</div>
       <div class="iscrizione"><strong>Iscrizione:</strong> ${iscr}</div>
       <div class="condizioni"><strong>Condizioni:</strong> ${cond}</div>
