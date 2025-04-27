@@ -1,9 +1,8 @@
 // URL del deployment Apps Script JSON
 const JSON_URL = 'https://script.google.com/macros/s/AKfycbyt2cEYGcsimAsPRB-tG2fCy-qDCkMvqV5QZmI1pV5r0VLE2L4a571PaYwa7S-o4SnY/exec';
 
-// Base URL per le immagini (raw.githubusercontent per bypassare limite 50MB jsDelivr)
-const BASE_PHOTO_URL = 'https://ddemartin.github.io/venezia-arte-pubblica/assets/images/';
-const BASE_THUMB_URL = 'https://ddemartin.github.io/venezia-arte-pubblica/assets/thumbs/';
+// Base URL per le immagini
+const BASE_PHOTO_URL = 'https://res.cloudinary.com/dzkq1canb/image/upload/';
 
 let allData = [];
 let currentTerm = '';
@@ -30,11 +29,13 @@ function highlight(text, term) {
 
 // Formatta data ISO in GG mese AAAA (italiano)
 function formatDateISO(isoStr) {
-  const d = new Date(isoStr);
-  if (isNaN(d)) return isoStr;
-  const day = String(d.getDate()).padStart(2, '0');
-  const months = ['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'];
-  return `${day} ${months[d.getMonth()]} ${d.getFullYear()}`;
+  if (!isoStr) return '';
+  const [year, month, day] = isoStr.split('T')[0].split('-'); // estrae solo la parte "2024-04-11"
+  const months = [
+    'gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno',
+    'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'
+  ];
+  return `${day} ${months[parseInt(month, 10) - 1]} ${year}`;
 }
 
 // Renderizza link "Torna indietro" nel menu
@@ -244,7 +245,7 @@ function renderDetail(o) {
   const dataFoto = highlight(isoDate ? formatDateISO(isoDate) : '', currentTerm);
   const notes    = highlight(o.Note, currentTerm);
   const filename = getImageFilename(o);
-  const photoUrl = BASE_PHOTO_URL + encodeURIComponent(filename);
+  const photoUrl = BASE_PHOTO_URL + (filename);
   const lat      = parseFloat(o.Latitudine);
   const lng      = parseFloat(o.Longitudine);
   content.innerHTML = `
@@ -258,9 +259,10 @@ function renderDetail(o) {
       <div class="materiale"><strong>Materiale:</strong> ${o.Materiale || ''}</div>
       <div class="dimensioni"><strong>Dimensioni cm:</strong> ${o['Dimensioni cm'] || ''}</div>
       <img
-       src="${photoUrl}"
-       class="detail-photo"
-       onerror="this.onerror=null; this.src='/venezia-arte-pubblica/assets/images/placeholder.jpg';"
+         src="${photoUrl}"
+         class="detail-photo"
+         onerror="handleImageError(this)"
+         alt="Foto ${o.Codice}"
       />
       <div class="descrizione"><strong>Descrizione:</strong> ${descr}</div>
       <div class="iscrizione"><strong>Iscrizione:</strong> ${iscr}</div>
@@ -276,6 +278,17 @@ function renderDetail(o) {
   L.marker([lat, lng]).addTo(map);
 }
 
+function handleImageError(imgElement) {
+  imgElement.onerror = null; // evita loop infiniti
+  imgElement.src = 'https://via.placeholder.com/600x400?text=Immagine+non+disponibile';
+  const errorText = document.createElement('div');
+  errorText.style.color = 'red';
+  errorText.style.marginTop = '10px';
+  errorText.style.fontSize = '1.2em';
+  errorText.style.textAlign = 'center';
+  errorText.textContent = 'Immagine non disponibile.';
+  imgElement.parentNode.appendChild(errorText);
+}
 // Aggiorna lo stato dei pulsanti di navigazione
 function updateNavButtons() {
   const prev = document.getElementById('prev-btn');
