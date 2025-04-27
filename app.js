@@ -17,7 +17,7 @@ let currentIndex = -1;
 // Definisce il nome file delle immagini in base a Codice e Data del foglio
 function getImageFilename(o) {
   const datePart = (o['Data miglior foto'] || '').slice(0, 10);
-  return encodeURIComponent(`${o.Codice}. ${datePart}.jpg`);
+  return `${o.Codice}-${datePart}.jpg`;
 }
 
 // Evidenziazione dei termini trovati
@@ -207,33 +207,29 @@ function selectTipo(t) {
 
 // Rende le card di elenco con thumbnail
 function renderCards(data) {
-  console.log("Dati immagini:", data.slice(0, 3)); // Mostra i primi 3 elementi
-  
-  data.forEach(o => {
-    const filename = getImageFilename(o);
-    console.log("Nome file generato:", filename);
-    console.log("URL completo:", BASE_THUMB_URL + filename);
-    
-    // Testa il caricamento dell'immagine
-    const testImg = new Image();
-    testImg.onload = () => console.log("Immagine caricabile:", filename);
-    testImg.onerror = () => console.error("Errore caricamento:", filename);
-    testImg.src = BASE_THUMB_URL + filename;
-  });
-  
   currentList = data;
   clearContent();
-  const content = document.getElementById('content'); if (!content) return;
+  const content = document.getElementById('content');
+  
   data.forEach(o => {
-    const card = document.createElement('div'); card.className = 'card';
+    const card = document.createElement('div');
+    card.className = 'card';
+    
     const filename = getImageFilename(o);
-    const thumbUrl = BASE_THUMB_URL + encodeURIComponent(filename);
+    const thumbUrl = BASE_THUMB_URL + filename;
+    
+    // Debug: verifica l'URL generato
+    console.log("Trying to load:", thumbUrl);
+    
     card.innerHTML = `
       <div class="title">${highlight(`${o.Codice} – ${o.Sestiere}`, currentTerm)}</div>
       <div class="subtitle">${highlight(`${o.Indirizzo}, ${o.Civico}`, currentTerm)}</div>
       <div class="type">${highlight(o.Tipo, currentTerm)}</div>
-      <img src="${thumbUrl}" class="thumb" alt="Anteprima ${o.Codice}">
-    `;
+      <img src="${thumbUrl}" 
+           class="thumb" 
+           alt="Anteprima ${o.Codice}"
+           onerror="this.src='placeholder.jpg';this.onerror=null;">`;
+    
     card.onclick = () => renderDetail(o);
     content.appendChild(card);
   });
