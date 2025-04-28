@@ -152,24 +152,26 @@
     .detail-card .title, .detail-card .type {
       font-size: 1.4em;
       font-weight: bold;
-      margin-bottom: 0.4em;
-      color: #af1919;
+      margin-top: 0.5em;
+      margin-bottom: 0.5em;
+      color: #801313;
     }
     .detail-card .subtitle {
-      font-size: 1.1em;
-      color: #444;
-      margin-bottom: 0.6em;
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #801313;
+      margin-bottom: 0.5em;
     }
     .detail-card .collocazione {
-      font-style: italic;
-      margin-bottom: 0.3em;
+      font-size: 1.0em;
+      margin-bottom: 0.5em;
       color: #444;
     }
     /* Nuovi campi dettaglio */
-    .detail-card .coords { font-size: 1em; color: #444; margin-bottom: 0.8em; }
+    .detail-card .coords { font-size: 1em; color: #444; margin-bottom: 0.5em; }
     .detail-card .datazione { font-size: 1em; color: #444; margin-bottom: 0.5em; }
     .detail-card .materiale { font-size: 1em; color: #444; margin-bottom: 0.5em; }
-    .detail-card .dimensioni { font-size: 1em; color: #444; margin-bottom: 1em; }
+    .detail-card .dimensioni { font-size: 1em; color: #444; margin-bottom: 0.5em; }
     .detail-card .detail-photo {
       display: block;
       width: 100%;
@@ -180,15 +182,12 @@
       object-fit: cover;
     }
     .detail-card .descrizione, .detail-card .iscrizione, .detail-card .condizioni, .detail-card .bibliografia, .detail-card .datafoto, .detail-card .note {
-      margin-top: 1em;
-      line-height: 1.6;
-      color: #444;
+      font-size: 1em; color: #444; margin-bottom: 0.5em;
     }
-    .detail-card .iscrizione, .detail-card .condizioni { font-style: italic; }
-    .detail-card .bibliografia, .detail-card .datafoto, .detail-card .note {
-      font-size: 0.95em;
-      padding: 0.6em;
-      border-radius: 4px;
+    .detail-card .iscrizione, .detail-card .condizioni, .detail-card .bibliografia, .detail-card .datafoto, .detail-card .note {
+      font-size: 1em;
+      color: #444;
+      margin-bottom: 0.5em;
     }
     #map { height: 400px; margin: 1em 0; border: 1px solid #ccc; border-radius: 4px; }
   </style>
@@ -212,7 +211,7 @@
       <div id="back-container">
         <button id="back-btn" style="display:none;">← Torna indietro</button>
       </div>
-      <div id="intro">Naviga l'archivio usando il menu a sinistra oppure cerca un'opera mediante la barra di ricerca qui sotto.</div>
+      <div id="intro">Consulta l'archivio navigando nel menu a sinistra oppure cerca un'opera mediante la barra di ricerca qui sotto.</div>
       <div id="search-container">
         <input id="search" type="search" placeholder="Cerca..." />
       </div>

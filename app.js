@@ -233,12 +233,12 @@ function renderDetail(o) {
   clearContent(); const content = document.getElementById('content');
   currentIndex = currentList.findIndex(item => item.Codice === o.Codice);
   updateNavButtons();
-  const title    = highlight(`${o.Codice} – ${o.Sestiere}`, currentTerm);
+  const title    = highlight(`${o.Codice} – ${o.Sestiere}, ${o.Parrocchia}`, currentTerm);
   const subtitle = highlight(`${o.Indirizzo}, ${o.Civico}`, currentTerm);
   const type     = highlight(o.Tipo, currentTerm);
   const colloc   = highlight(o.Collocazione, currentTerm);
   const descr    = highlight(o.Descrizione, currentTerm);
-  const iscr     = highlight(o.Iscrizione || 'Nessuna.', currentTerm);
+  const iscr     = highlight(o.Iscrizione || 'nessuna.', currentTerm);
   const cond     = highlight(o.Conservazione, currentTerm);
   const bibl     = highlight(o.Bibliografia, currentTerm);
   const isoDate  = o['Data miglior foto'] || '';
@@ -250,28 +250,27 @@ function renderDetail(o) {
   const lng      = parseFloat(o.Longitudine);
   content.innerHTML = `
     <div class="detail-card">
-      <div class="title">${title}</div>
-      <div class="subtitle">${subtitle}</div>
-      <div class="type">${type}</div>
-      <div class="collocazione">${colloc}</div>
-      <div class="coords"><strong>Coordinate WGS84:</strong> ${o['Coordinate WGS84'] || ''}</div>
-      <div class="datazione"><strong>Datazione:</strong> ${o.Datazione || ''}</div>
-      <div class="materiale"><strong>Materiale:</strong> ${o.Materiale || ''}</div>
-      <div class="dimensioni"><strong>Dimensioni cm:</strong> ${o['Dimensioni cm'] || ''}</div>
       <img
          src="${photoUrl}"
          class="detail-photo"
          onerror="handleImageError(this)"
          alt="Foto ${o.Codice}"
       />
+      <div class="title">${title}</div>
+      <div class="subtitle">${subtitle}</div>
+      <div class="collocazione"><strong>Collocazione:</strong> ${colloc}</div>
+      <div class="coords"><strong>Coordinate:</strong> ${o['Coordinate WGS84'] || ''}</div>
+      <div class="type">${type}</div>
+      <div class="datazione"><strong>Datazione:</strong> ${o.Datazione || ''}</div>
+      <div class="materiale"><strong>Materiale:</strong> ${o.Materiale || ''}</div>
+      <div class="dimensioni"><strong>Dimensioni cm:</strong> ${o['Dimensioni cm'] || ''}</div>
       <div class="descrizione"><strong>Descrizione:</strong> ${descr}</div>
       <div class="iscrizione"><strong>Iscrizione:</strong> ${iscr}</div>
       <div class="condizioni"><strong>Condizioni:</strong> ${cond}</div>
-      <div class="bibliografia"><strong>Bibliografia:</strong> ${bibl}</div>
-      <div class="datafoto"><strong>Data foto:</strong> ${dataFoto}</div>
-      <div class="note"><strong>Note:</strong> ${notes}</div>
       <div id="map"></div>
-    </div>
+      <div class="bibliografia"><strong>Bibliografia:</strong> ${bibl}</div>
+      <div class="datafoto"><strong>Data della fotografia:</strong> ${dataFoto}</div>
+            </div>
   `;
   const map = L.map('map').setView([lat, lng], 16);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ attribution:'&copy; OpenStreetMap' }).addTo(map);
