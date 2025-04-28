@@ -56,13 +56,28 @@ function renderBackLink() {
 function goBack() {
   if (selectedA) {
     selectedA = '';
-    selectParrocchia(selectedP);
+    const filtered = allData.filter(o => o.Parrocchia === selectedP);
+    currentList = filtered;
+    clearSidebar();
+    buildMenuList([...new Set(filtered.map(o => o.Indirizzo))].sort(), selectIndirizzo);
+    renderCards(filtered);
   } else if (selectedP) {
     selectedP = '';
-    selectSestiere(selectedS);
+    const filtered = allData.filter(o => o.Sestiere === selectedS);
+    currentList = filtered;
+    clearSidebar();
+    buildMenuList([...new Set(filtered.map(o => o.Parrocchia))].sort(), selectParrocchia);
+    renderCards(filtered);
   } else if (selectedS) {
     selectedS = '';
+    currentList = allData;
+    clearSidebar();
+    const sestieri = [...new Set(allData.map(o => o.Sestiere))].sort();
+    buildMenuList(sestieri, selectSestiere);
+    renderCards(allData);
+  } else {
     showModeMenu();
+    updateBreadcrumb();
   }
 }
 
@@ -83,11 +98,49 @@ async function fetchData() {
     if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
     allData = await res.json();
     showModeMenu();
+    updateBreadcrumb();
   } catch (err) {
     console.error('Errore caricamento JSON:', err);
     document.getElementById('sidebar').innerHTML = '<p style="color:red">Impossibile caricare i dati.</p>';
   }
 }
+
+// Funzione di ricerca migliorata
+document.getElementById('search').addEventListener('input', function () {
+  currentTerm = this.value.trim().toLowerCase();
+  if (!currentTerm) {
+    if (currentMode === 'Sestiere') buildSestiereFlow();
+    else if (currentMode === 'Tipo') buildTipoFlow();
+    else showModeMenu();
+    return;
+  }
+
+  const filtered = allData.filter(o => {
+    return (
+      (o.Codice && o.Codice.toLowerCase().includes(currentTerm)) ||
+      (o.Sestiere && o.Sestiere.toLowerCase().includes(currentTerm)) ||
+      (o.Parrocchia && o.Parrocchia.toLowerCase().includes(currentTerm)) ||
+      (o.Indirizzo && o.Indirizzo.toLowerCase().includes(currentTerm)) ||
+      (o.Civico && o.Civico.toLowerCase().includes(currentTerm)) ||
+      (o.Tipo && o.Tipo.toLowerCase().includes(currentTerm)) ||
+      (o.Descrizione && o.Descrizione.toLowerCase().includes(currentTerm))
+    );
+  });
+
+  clearSidebar();
+  clearContent();
+  buildMenuList(['Risultati ricerca'], () => {});
+
+  if (filtered.length > 0) {
+    renderCards(filtered);
+  } else {
+    document.getElementById('content').innerHTML = `
+      <p style="color: #888; font-size: 1.2em; text-align: center; margin-top: 2em;">
+        Nessun risultato trovato.
+      </p>
+    `;
+  }
+});
 
 // Pulisce il menu finale
 function clearSidebar() {
@@ -126,7 +179,7 @@ function buildMenuList(items, handler) {
   const ul = document.createElement('ul');
   items.forEach(item => {
     const li = document.createElement('li');
-    li.textContent = highlight(item, currentTerm);
+    li.innerHTML = (item === 'Risultati ricerca') ? item : highlight(item, currentTerm);
     li.onclick = () => handler(item);
     ul.appendChild(li);
   });
@@ -146,6 +199,7 @@ function selectSestiere(s) {
   selectedS = s;
   selectedP = selectedA = '';
   clearSidebar();
+  updateBreadcrumb();
   const sb = document.getElementById('sidebar');
   const title = document.createElement('div');
   title.className = 'sidebar-selected';
@@ -161,6 +215,7 @@ function selectParrocchia(p) {
   selectedP = p;
   selectedA = '';
   clearSidebar();
+  updateBreadcrumb();
   const sb = document.getElementById('sidebar');
   const selS = document.createElement('div'); selS.className = 'sidebar-selected'; selS.textContent = selectedS;
   const title = document.createElement('div'); title.className = 'sidebar-selected';
@@ -176,6 +231,7 @@ function selectParrocchia(p) {
 function selectIndirizzo(a) {
   selectedA = a;
   clearSidebar();
+  updateBreadcrumb();
   const sb = document.getElementById('sidebar');
   const selS = document.createElement('div'); selS.className = 'sidebar-selected'; selS.textContent = selectedS;
   const selP = document.createElement('div'); selP.className = 'sidebar-selected'; selP.textContent = selectedP;
@@ -212,14 +268,38 @@ function renderCards(data) {
   clearContent();
   const content = document.getElementById('content');
 
+  // ✅ Inseriamo il contatore
+  const counter = document.createElement('div');
+  counter.style.margin = '0 0 1em 0';
+  counter.style.fontSize = '1.1em';
+  counter.style.color = '#666';
+  counter.textContent = data.length === 1
+  ? '1 risultato trovato'
+  : `${data.length} risultati trovati`;
+  content.appendChild(counter);
+
+  // Continua a creare le cards normalmente
   data.forEach(o => {
     const card = document.createElement('div');
     card.className = 'card';
+    const filename = getImageFilename(o);
+    const thumbUrl = BASE_PHOTO_URL + 'w_80,h_80,c_fill/' + filename;
 
-   card.innerHTML = `
-      <div class="title">${highlight(`${o.Codice} – ${o.Sestiere}`, currentTerm)}</div>
-      <div class="subtitle">${highlight(`${o.Indirizzo}, ${o.Civico}`, currentTerm)}</div>
-      <div class="type">${highlight(o.Tipo, currentTerm)}</div>
+    card.innerHTML = `
+      <div style="display: flex; align-items: center;">
+        <img 
+          data-src="${thumbUrl}" 
+          alt="Anteprima ${o.Codice}" 
+          class="lazyload"
+          style="width: 80px; height: 80px; object-fit: cover; border-radius: 6px; margin-right: 1em;"
+          onerror="this.onerror=null;this.src='https://via.placeholder.com/80x80?text=N/A';"
+        />
+        <div>
+          <div class="title">${highlight(`${o.Codice} – ${o.Sestiere}`, currentTerm)}</div>
+          <div class="subtitle">${highlight(`${o.Indirizzo}, ${o.Civico}`, currentTerm)}</div>
+          <div class="type">${highlight(o.Tipo, currentTerm)}</div>
+        </div>
+      </div>
     `;
 
     card.onclick = () => renderDetail(o);
@@ -229,10 +309,14 @@ function renderCards(data) {
 
 // Rende la vista dettaglio senza cancellare il menu
 function renderDetail(o) {
-  const backBtn = document.getElementById('back-btn'); if (backBtn) backBtn.style.display = 'block';
-  clearContent(); const content = document.getElementById('content');
+  const backBtn = document.getElementById('back-btn');
+  if (backBtn) backBtn.style.display = 'block';
+
+  clearContent();
+  const content = document.getElementById('content');
   currentIndex = currentList.findIndex(item => item.Codice === o.Codice);
   updateNavButtons();
+
   const title    = highlight(`${o.Codice} – ${o.Sestiere}, ${o.Parrocchia}`, currentTerm);
   const subtitle = highlight(`${o.Indirizzo}, ${o.Civico}`, currentTerm);
   const type     = highlight(o.Tipo, currentTerm);
@@ -248,14 +332,15 @@ function renderDetail(o) {
   const photoUrl = BASE_PHOTO_URL + (filename);
   const lat      = parseFloat(o.Latitudine);
   const lng      = parseFloat(o.Longitudine);
+
   content.innerHTML = `
     <div class="detail-card">
       <img
-         src="${photoUrl}"
-         class="detail-photo"
-         onerror="handleImageError(this)"
-         alt="Foto ${o.Codice}"
-      />
+  src="${photoUrl}"
+  class="detail-photo"
+  onerror="handleImageError(this)"
+  alt="Foto ${o.Codice}"
+/>
       <div class="title">${title}</div>
       <div class="subtitle">${subtitle}</div>
       <div class="collocazione"><strong>Collocazione:</strong> ${colloc}</div>
@@ -270,11 +355,25 @@ function renderDetail(o) {
       <div id="map"></div>
       <div class="bibliografia"><strong>Bibliografia:</strong> ${bibl}</div>
       <div class="datafoto"><strong>Data della fotografia:</strong> ${dataFoto}</div>
-            </div>
+      <div class="note"><strong>Note:</strong> ${notes}</div>
+    </div>
   `;
+
+  // Mappa Leaflet
   const map = L.map('map').setView([lat, lng], 16);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ attribution:'&copy; OpenStreetMap' }).addTo(map);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
   L.marker([lat, lng]).addTo(map);
+}
+
+function updateBreadcrumb() {
+  const breadcrumb = document.getElementById('breadcrumb');
+  let parts = [];
+
+  if (selectedS) parts.push(selectedS);
+  if (selectedP) parts.push(selectedP);
+  if (selectedA) parts.push(selectedA);
+
+  breadcrumb.textContent = parts.join(' > ') || 'Archivio';
 }
 
 function handleImageError(imgElement) {

@@ -190,10 +190,29 @@
       margin-bottom: 0.5em;
     }
     #map { height: 400px; margin: 1em 0; border: 1px solid #ccc; border-radius: 4px; }
+
+    .card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      padding: 1em;
+      margin: 1em 0;
+      transition: transform 0.2s, opacity 0.5s;
+      cursor: pointer;
+      opacity: 0;
+      animation: fadeIn 0.5s forwards;
+    }
+
+      @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+  }
   </style>
 
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.2/lazysizes.min.js" async></script>
   <script src="app.js" defer></script>
 </head>
 <body>
@@ -215,6 +234,8 @@
       <div id="search-container">
         <input id="search" type="search" placeholder="Cerca..." />
       </div>
+     <div id="breadcrumb" style="margin-bottom: 1em; font-size: 0.95em; color: #555;"></div>
+
 
       <!-- frecce di navigazione -->
   <div id="nav-arrows" style="
