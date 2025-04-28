@@ -105,10 +105,14 @@
       cursor: default;
     }
     #content {
-      flex: 1;
-      overflow-y: auto;
-      text-align: left;
-    }
+  flex: 1;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1em;
+  padding: 1em 0;
+}
+
     ul { list-style: none; padding: 0; margin: 0; }
     ul li { padding: 0.5em; cursor: pointer; }
     ul li:hover { background: #eaeaea; }
@@ -167,6 +171,12 @@
       margin-bottom: 0.5em;
       color: #444;
     }
+    #cards-container {
+     display: grid;
+     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+     gap: 1em;
+    }
+
     /* Nuovi campi dettaglio */
     .detail-card .coords { font-size: 1em; color: #444; margin-bottom: 0.5em; }
     .detail-card .datazione { font-size: 1em; color: #444; margin-bottom: 0.5em; }
@@ -190,6 +200,28 @@
       margin-bottom: 0.5em;
     }
     #map { height: 400px; margin: 1em 0; border: 1px solid #ccc; border-radius: 4px; }
+
+    .custom-marker {
+  background-color: #801313; /* Rosso veneziano */
+  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+  display: block;
+  border: 1px solid white;
+}
+
+#home-map {
+  height: 400px;
+  transition: height 0.5s ease;
+  margin-bottom: 1em;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Quando siamo in modalità dettaglio */
+body.detail-mode #home-map {
+  height: 200px;
+}
 
     .card {
       background: #fff;
@@ -228,14 +260,17 @@
     </div>
     <div id="main">
       <div id="back-container">
-        <button id="back-btn" style="display:none;">← Torna indietro</button>
+        <div id="back-breadcrumb" style="display:flex; align-items:center; gap: 1em;">
+          <button id="back-btn" style="display:none;">← Torna indietro</button>
+          <div id="breadcrumb" style="font-size: 0.9em; color: #555;"></div>
+        </div>
       </div>
       <div id="intro">Consulta l'archivio navigando nel menu a sinistra oppure cerca un'opera mediante la barra di ricerca qui sotto.</div>
+      <div id="home-map"></div>
       <div id="search-container">
         <input id="search" type="search" placeholder="Cerca..." />
       </div>
      <div id="breadcrumb" style="margin-bottom: 1em; font-size: 0.95em; color: #555;"></div>
-
 
       <!-- frecce di navigazione -->
   <div id="nav-arrows" style="

@@ -42,18 +42,30 @@ function formatDateISO(isoStr) {
 function renderBackLink() {
   const backContainer = document.getElementById('sidebar-back');
   backContainer.innerHTML = '';
+  const breadcrumb = document.getElementById('breadcrumb');
+  breadcrumb.innerHTML = '';
+
   if (!selectedS && !selectedP && !selectedA) return;
+
   const link = document.createElement('a');
   link.href = '#';
   link.textContent = '← Torna indietro';
   link.style.display = 'block';
-  link.style.marginBottom = '0.5em';
+  link.style.marginBottom = '0.2em';
   link.onclick = e => { e.preventDefault(); goBack(); };
   backContainer.appendChild(link);
+
+  let trail = [];
+  if (selectedS) trail.push(selectedS);
+  if (selectedP) trail.push(selectedP);
+  if (selectedA) trail.push(selectedA);
+  breadcrumb.textContent = trail.join(' ➔ ');
 }
+
 
 // Gestisce il ritorno al livello precedente
 function goBack() {
+  document.body.classList.remove('detail-mode');
   if (selectedA) {
     selectedA = '';
     const filtered = allData.filter(o => o.Parrocchia === selectedP);
@@ -94,14 +106,15 @@ window.addEventListener('DOMContentLoaded', () => {
 // Fetch dei dati e avvio del menu iniziale
 async function fetchData() {
   try {
+    document.getElementById('sidebar').innerHTML = '<p style="padding:1em; text-align:center; color:#555;">Caricamento dei dati in corso, attendere...</p>';
+
     const res = await fetch(JSON_URL);
     if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
     allData = await res.json();
     showModeMenu();
-    updateBreadcrumb();
   } catch (err) {
     console.error('Errore caricamento JSON:', err);
-    document.getElementById('sidebar').innerHTML = '<p style="color:red">Impossibile caricare i dati.</p>';
+    document.getElementById('sidebar').innerHTML = '<p style="color:red; padding:1em;">Impossibile caricare i dati.</p>';
   }
 }
 
@@ -155,12 +168,14 @@ function clearContent() {
 
 // Mostra il menu iniziale: scelta tra Sestiere e Tipo
 function showModeMenu() {
+  document.body.classList.remove('detail-mode');
   currentMode = '';
   selectedS = selectedP = selectedA = '';
   clearSidebar();
   clearContent();
   renderBackLink();
   buildMenuList(['Sestiere', 'Tipo'], selectMode);
+  initHomeMap();
 }
 
 // Seleziona la modalità di navigazione
@@ -208,6 +223,7 @@ function selectSestiere(s) {
   renderBackLink();
   const filtered = allData.filter(o => o.Sestiere === s);
   renderCards(filtered);
+  updateHomeMapMarkers(filtered);
   buildMenuList([...new Set(filtered.map(o => o.Parrocchia))].sort(), selectParrocchia);
 }
 
@@ -225,6 +241,7 @@ function selectParrocchia(p) {
   renderBackLink();
   const filtered = allData.filter(o => o.Parrocchia === p);
   renderCards(filtered);
+  updateHomeMapMarkers(filtered);
   buildMenuList([...new Set(filtered.map(o => o.Indirizzo))].sort(), selectIndirizzo);
 }
 
@@ -242,6 +259,7 @@ function selectIndirizzo(a) {
   renderBackLink();
   const filtered = allData.filter(o => o.Indirizzo === a);
   renderCards(filtered);
+  updateHomeMapMarkers(filtered);
 }
 
 // Flusso Tipo di opera
@@ -261,25 +279,124 @@ function selectTipo(t) {
   renderBackLink();
   renderCards(allData.filter(o => o.Tipo === t));
 }
+//Mappa di ricerca
+let homeMap = null;
+let homeMarkers = [];
+const smallMarkerIcon = L.divIcon({
+  className: 'custom-marker',
+  iconSize: [10, 10]
+});
+
+function initHomeMap() {
+  clearContent();
+  
+  if (!document.getElementById('home-map')) return;
+  
+  if (homeMap) {
+    homeMap.remove(); // Distrugge la mappa se già esiste
+    homeMap = null;
+  }
+  
+  homeMap = L.map('home-map').setView([45.4371908, 12.3345898], 13); // Centro Venezia
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 19
+  }).addTo(homeMap);
+
+  homeMarkers = [];
+
+  allData.forEach(o => {
+    const lat = parseFloat(o.Latitudine);
+    const lng = parseFloat(o.Longitudine);
+
+    if (!isNaN(lat) && !isNaN(lng)) {
+      const marker = L.marker([lat, lng], { icon: smallMarkerIcon });
+      
+      marker.on('click', () => renderDetail(o));
+
+      marker.addTo(homeMap);
+      homeMarkers.push(marker);
+    }
+  });
+
+  // Fit automatico di tutti i marker
+  if (homeMarkers.length > 0) {
+    const group = L.featureGroup(homeMarkers);
+    homeMap.fitBounds(group.getBounds(), { padding: [30, 30] });
+  }
+}
+
+//Aggiorna mappa secondo il filtro
+function updateHomeMapMarkers(dataFiltrata) {
+  if (!homeMap) return;
+
+  // Rimuove tutti i marker precedenti
+  homeMarkers.forEach(marker => homeMap.removeLayer(marker));
+  homeMarkers = [];
+
+  dataFiltrata.forEach(o => {
+    if (!o || !o.Codice || !o['Latitudine'] || !o['Longitudine']) return; // Skippa se mancano dati essenziali
+  
+    const lat = parseFloat(o.Latitudine);
+    const lng = parseFloat(o.Longitudine);
+  
+    if (!isNaN(lat) && !isNaN(lng)) {
+      const marker = L.marker([lat, lng], { icon: smallMarkerIcon });
+      marker.on('click', () => renderDetail(o));
+      marker.addTo(homeMap);
+      homeMarkers.push(marker);
+    }
+  });
+
+  if (homeMarkers.length > 0) {
+    const group = L.featureGroup(homeMarkers);
+    homeMap.fitBounds(group.getBounds(), { padding: [30, 30] });
+  }
+}
 
 // Rende le card di elenco con thumbnail
 function renderCards(data) {
+  if (!data || data.length === 0) {
+    clearContent();
+    const content = document.getElementById('content');
+    const noResult = document.createElement('div');
+    noResult.style.padding = '2em';
+    noResult.style.textAlign = 'center';
+    noResult.style.color = '#666';
+    noResult.innerHTML = '<strong>Nessun risultato trovato.</strong><br>Prova a cambiare criterio di ricerca.';
+    content.appendChild(noResult);
+    return;
+  }
+
   currentList = data;
   clearContent();
   const content = document.getElementById('content');
 
-  // ✅ Inseriamo il contatore
+  // ✅ Wrapper che contiene contatore + cards
+  const wrapper = document.createElement('div');
+  wrapper.style.display = 'flex';
+  wrapper.style.flexDirection = 'column';
+  wrapper.style.gap = '1em';
+  content.appendChild(wrapper);
+
+  // ✅ Contatore
   const counter = document.createElement('div');
-  counter.style.margin = '0 0 1em 0';
   counter.style.fontSize = '1.1em';
   counter.style.color = '#666';
   counter.textContent = data.length === 1
-  ? '1 risultato trovato'
-  : `${data.length} risultati trovati`;
-  content.appendChild(counter);
+    ? '1 risultato trovato'
+    : `${data.length} risultati trovati`;
+  wrapper.appendChild(counter);
 
-  // Continua a creare le cards normalmente
+  // ✅ Container delle cards
+  const cardsContainer = document.createElement('div');
+  cardsContainer.id = 'cards-container';
+  wrapper.appendChild(cardsContainer);
+
+  // ✅ Popola cards
   data.forEach(o => {
+    if (!o || !o.Codice || !o['Indirizzo']) return;
     const card = document.createElement('div');
     card.className = 'card';
     const filename = getImageFilename(o);
@@ -301,18 +418,19 @@ function renderCards(data) {
         </div>
       </div>
     `;
-
     card.onclick = () => renderDetail(o);
-    content.appendChild(card);
+    cardsContainer.appendChild(card);
   });
 }
 
 // Rende la vista dettaglio senza cancellare il menu
 function renderDetail(o) {
+  document.body.classList.add('detail-mode'); // 🔥 aggiunge la classe
   const backBtn = document.getElementById('back-btn');
   if (backBtn) backBtn.style.display = 'block';
-
   clearContent();
+  
+  // tutto il resto del render...  
   const content = document.getElementById('content');
   currentIndex = currentList.findIndex(item => item.Codice === o.Codice);
   updateNavButtons();
@@ -330,17 +448,18 @@ function renderDetail(o) {
   const notes    = highlight(o.Note, currentTerm);
   const filename = getImageFilename(o);
   const photoUrl = BASE_PHOTO_URL + (filename);
-  const lat      = parseFloat(o.Latitudine);
-  const lng      = parseFloat(o.Longitudine);
+  
+  const lat = parseFloat(o.Latitudine);
+  const lng = parseFloat(o.Longitudine);
 
   content.innerHTML = `
     <div class="detail-card">
       <img
-  src="${photoUrl}"
-  class="detail-photo"
-  onerror="handleImageError(this)"
-  alt="Foto ${o.Codice}"
-/>
+         src="${photoUrl}"
+         class="detail-photo"
+         onerror="handleImageError(this)"
+         alt="Foto ${o.Codice}"
+      />
       <div class="title">${title}</div>
       <div class="subtitle">${subtitle}</div>
       <div class="collocazione"><strong>Collocazione:</strong> ${colloc}</div>
@@ -352,17 +471,45 @@ function renderDetail(o) {
       <div class="descrizione"><strong>Descrizione:</strong> ${descr}</div>
       <div class="iscrizione"><strong>Iscrizione:</strong> ${iscr}</div>
       <div class="condizioni"><strong>Condizioni:</strong> ${cond}</div>
-      <div id="map"></div>
       <div class="bibliografia"><strong>Bibliografia:</strong> ${bibl}</div>
       <div class="datafoto"><strong>Data della fotografia:</strong> ${dataFoto}</div>
-      <div class="note"><strong>Note:</strong> ${notes}</div>
     </div>
   `;
 
+  // Riutilizza la mappa home ma con un solo marker
+  if (homeMap) {
+    homeMap.eachLayer(function (layer) {
+      if (layer instanceof L.Marker) {
+        homeMap.removeLayer(layer);
+      }
+    });
+
+    if (!isNaN(lat) && !isNaN(lng)) {
+      const marker = L.marker([lat, lng], { icon: smallMarkerIcon }).addTo(homeMap);
+      homeMap.setView([lat, lng], 16); // Zoom su singola opera
+    }
+  }
+
+  // Dopo 500 ms ricentra di nuovo il marker
+  setTimeout(() => {
+    if (homeMap) {
+      homeMap.invalidateSize(); // 🔥 dice a Leaflet di ricalcolare la mappa
+      if (!isNaN(lat) && !isNaN(lng)) {
+        homeMap.setView([lat, lng], 16);
+      }
+    }
+  }, 600);
+  
   // Mappa Leaflet
-  const map = L.map('map').setView([lat, lng], 16);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
-  L.marker([lat, lng]).addTo(map);
+  const map = L.map('map').setView([lat, lng], 15);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap contributors',
+  maxZoom: 19
+}).addTo(map);
+
+L.marker([lat, lng]).addTo(map);
+
 }
 
 function updateBreadcrumb() {
