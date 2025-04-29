@@ -10,6 +10,12 @@
 
   <!-- Stili personalizzati -->
   <style>
+    #pagination {
+  margin-top: 0.5em !important;
+}
+#search-box {
+  margin-bottom: 0.5em;
+}
     body {
       margin: 0;
       font-family: sans-serif;
@@ -56,6 +62,9 @@
       font-size: 1.2em;
       font-weight: bold;
       margin-bottom: 0.5em;
+    }
+    #sidebar-back {
+      margin-bottom: 1.5em;
     }
     #main {
       flex: 1;
@@ -149,9 +158,25 @@
       margin-top: 0.8em;
     }
     .detail-card {
-      max-width: 800px;
-      margin: 1em 0;
-      text-align: left;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5em;
+  margin: 1em 0;
+  align-items: flex-start;
+}
+
+.detail-photo {
+  flex: 0 0 650px;
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.detail-info {
+  flex: 1 1 300px;
+  min-width: 280px;
+
     }
     .detail-card .title, .detail-card .type {
       font-size: 1.4em;
@@ -175,6 +200,11 @@
      display: grid;
      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
      gap: 1em;
+    }
+    #breadcrumb {
+    font-size: 0.95em;
+    color: #555;
+    font-weight: normal;
     }
 
     /* Nuovi campi dettaglio */
@@ -242,6 +272,41 @@ body.detail-mode #home-map {
   }
   </style>
 
+<style>
+  @media (max-width: 768px) {
+  .detail-card {
+    flex-direction: column;
+  }
+    header h1 {
+      font-size: 1.2em;
+    }
+    header p {
+      font-size: 0.9em;
+    }
+    #container {
+      flex-direction: column;
+    }
+    #sidebar {
+      flex: 0 0 auto;
+      width: 100%;
+      border-right: none;
+      border-bottom: 1px solid #ddd;
+    }
+    #main {
+      padding: 0.5em;
+    }
+    #content {
+      display: flex;
+      flex-direction: column;
+    }
+    .card {
+      width: 100% !important;
+      margin: 0.5em 0;
+      padding: 0.8em;
+    }
+  }
+  </style>  
+
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" defer></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.2/lazysizes.min.js" async></script>
@@ -256,7 +321,10 @@ body.detail-mode #home-map {
   <div id="container">
     <div id="sidebar">
       <div class="sidebar-header">Menu di navigazione</div>
-      <div id="sidebar-back"></div>
+      <div id="sidebar-back">
+        <a href="#" id="back-to-home" style="display:block; margin-bottom: 0.5em;">← Torna alla pagina iniziale</a>
+      </div>
+     
     </div>
     <div id="main">
       <div id="back-container">
@@ -270,7 +338,6 @@ body.detail-mode #home-map {
       <div id="search-container">
         <input id="search" type="search" placeholder="Cerca..." />
       </div>
-     <div id="breadcrumb" style="margin-bottom: 1em; font-size: 0.95em; color: #555;"></div>
 
       <!-- frecce di navigazione -->
   <div id="nav-arrows" style="

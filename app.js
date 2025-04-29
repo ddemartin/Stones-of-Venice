@@ -10,6 +10,7 @@ let currentMode = '';
 let selectedS = '';
 let selectedP = '';
 let selectedA = '';
+let selectedTipo = '';
 let currentList = [];
 let currentIndex = -1;
 
@@ -38,44 +39,70 @@ function formatDateISO(isoStr) {
   return `${day} ${months[parseInt(month, 10) - 1]} ${year}`;
 }
 
+function fitHomeMapBounds() {
+  if (homeMarkers.length > 0) {
+    const group = L.featureGroup(homeMarkers);
+    homeMap.fitBounds(group.getBounds(), { padding: [30, 30] });
+  }
+}
+
 // Renderizza link "Torna indietro" nel menu
 function renderBackLink() {
   const backContainer = document.getElementById('sidebar-back');
   backContainer.innerHTML = '';
-  const breadcrumb = document.getElementById('breadcrumb');
-  breadcrumb.innerHTML = '';
 
-  if (!selectedS && !selectedP && !selectedA) return;
+  const startLink = document.createElement('a');
+  startLink.textContent = '← Torna alla pagina iniziale';
+  startLink.style.display = 'block';
+  startLink.style.marginBottom = '0.5em';
+  startLink.href = '#';
 
-  const link = document.createElement('a');
-  link.href = '#';
-  link.textContent = '← Torna indietro';
-  link.style.display = 'block';
-  link.style.marginBottom = '0.2em';
-  link.onclick = e => { e.preventDefault(); goBack(); };
-  backContainer.appendChild(link);
+  if (!selectedS && !selectedP && !selectedA && !selectedTipo && !currentMode) {
+    startLink.style.pointerEvents = 'none';
+    startLink.style.color = '#888';
+    startLink.style.textDecoration = 'none';
+  } else {
+    startLink.onclick = e => {
+      e.preventDefault();
+      showModeMenu();
+    };
+  }
 
-  let trail = [];
-  if (selectedS) trail.push(selectedS);
-  if (selectedP) trail.push(selectedP);
-  if (selectedA) trail.push(selectedA);
-  breadcrumb.textContent = trail.join(' ➔ ');
+  backContainer.appendChild(startLink);
+
+  if (selectedS || selectedP || selectedA || selectedTipo) {
+    const backLink = document.createElement('a');
+    backLink.textContent = '← Torna al menu precedente';
+    backLink.href = '#';
+    backLink.style.display = 'block';
+    backLink.style.marginTop = '1em';
+    backLink.onclick = e => {
+      e.preventDefault();
+      goBack();
+    };
+    backContainer.appendChild(backLink);
+  }
 }
-
 
 // Gestisce il ritorno al livello precedente
 function goBack() {
   document.body.classList.remove('detail-mode');
+
+  const mapContainer = document.getElementById('map-container');
+  if (mapContainer) mapContainer.style.height = '400px';
+
+  let filtered = allData;
+
   if (selectedA) {
     selectedA = '';
-    const filtered = allData.filter(o => o.Parrocchia === selectedP);
+    filtered = allData.filter(o => o.Parrocchia === selectedP);
     currentList = filtered;
     clearSidebar();
     buildMenuList([...new Set(filtered.map(o => o.Indirizzo))].sort(), selectIndirizzo);
     renderCards(filtered);
   } else if (selectedP) {
     selectedP = '';
-    const filtered = allData.filter(o => o.Sestiere === selectedS);
+    filtered = allData.filter(o => o.Sestiere === selectedS);
     currentList = filtered;
     clearSidebar();
     buildMenuList([...new Set(filtered.map(o => o.Parrocchia))].sort(), selectParrocchia);
@@ -84,13 +111,30 @@ function goBack() {
     selectedS = '';
     currentList = allData;
     clearSidebar();
-    const sestieri = [...new Set(allData.map(o => o.Sestiere))].sort();
+    const sestieri = [...new Set(filtered.map(o => o.Sestiere))].sort();
     buildMenuList(sestieri, selectSestiere);
-    renderCards(allData);
+    renderCards(filtered);
+  } else if (selectedTipo) {
+    selectedTipo = '';
+    currentList = allData;
+    clearSidebar();
+    buildTipoFlow(); // torna alla lista dei tipi
+    renderCards(filtered);
   } else {
     showModeMenu();
     updateBreadcrumb();
+    return;
   }
+
+  updateBreadcrumb();
+
+  setTimeout(() => {
+    if (homeMap) {
+      homeMap.invalidateSize();
+      updateHomeMapMarkers(filtered);
+      fitMapToMarkers(filtered);
+    }
+  }, 300);
 }
 
 // Inizializza l'app al caricamento del DOM
@@ -176,6 +220,7 @@ function showModeMenu() {
   renderBackLink();
   buildMenuList(['Sestiere', 'Tipo'], selectMode);
   initHomeMap();
+  renderCards(allData); // ✅ mostra subito tutte le cards
 }
 
 // Seleziona la modalità di navigazione
@@ -200,6 +245,12 @@ function buildMenuList(items, handler) {
   });
   sidebar.appendChild(ul);
   renderBackLink();
+}
+
+function fitMapToMarkers(data) {
+  if (!data || !data.length || !homeMap) return;
+  const bounds = L.latLngBounds(data.map(o => [parseFloat(o.Latitudine), parseFloat(o.Longitudine)]));
+  homeMap.fitBounds(bounds, { padding: [20, 20] });
 }
 
 // Flusso Sestiere → Parrocchia → Indirizzo
@@ -271,20 +322,30 @@ function buildTipoFlow() {
 }
 
 function selectTipo(t) {
+  selectedTipo = t;
+  currentMode = 'Tipo'; // <<--- fondamentale
   clearSidebar();
   const sb = document.getElementById('sidebar');
-  const title = document.createElement('div'); title.className = 'sidebar-selected';
+  const title = document.createElement('div');
+  title.className = 'sidebar-selected';
   title.innerHTML = `<strong>${t}</strong><div>Ora scegli le opere</div>`;
   sb.appendChild(title);
-  renderBackLink();
-  renderCards(allData.filter(o => o.Tipo === t));
+
+  renderBackLink(); // <-- importantissimo!
+  
+  const filtered = allData.filter(o => o.Tipo === t);
+  renderCards(filtered);
+  updateHomeMapMarkers(filtered);
+  fitMapToMarkers(filtered);
+  updateBreadcrumb();
 }
+
 //Mappa di ricerca
 let homeMap = null;
 let homeMarkers = [];
 const smallMarkerIcon = L.divIcon({
   className: 'custom-marker',
-  iconSize: [10, 10]
+  iconSize: [12, 12]
 });
 
 function initHomeMap() {
@@ -454,26 +515,29 @@ function renderDetail(o) {
 
   content.innerHTML = `
     <div class="detail-card">
-      <img
-         src="${photoUrl}"
-         class="detail-photo"
-         onerror="handleImageError(this)"
-         alt="Foto ${o.Codice}"
-      />
-      <div class="title">${title}</div>
-      <div class="subtitle">${subtitle}</div>
-      <div class="collocazione"><strong>Collocazione:</strong> ${colloc}</div>
-      <div class="coords"><strong>Coordinate:</strong> ${o['Coordinate WGS84'] || ''}</div>
-      <div class="type">${type}</div>
-      <div class="datazione"><strong>Datazione:</strong> ${o.Datazione || ''}</div>
-      <div class="materiale"><strong>Materiale:</strong> ${o.Materiale || ''}</div>
-      <div class="dimensioni"><strong>Dimensioni cm:</strong> ${o['Dimensioni cm'] || ''}</div>
-      <div class="descrizione"><strong>Descrizione:</strong> ${descr}</div>
-      <div class="iscrizione"><strong>Iscrizione:</strong> ${iscr}</div>
-      <div class="condizioni"><strong>Condizioni:</strong> ${cond}</div>
-      <div class="bibliografia"><strong>Bibliografia:</strong> ${bibl}</div>
-      <div class="datafoto"><strong>Data della fotografia:</strong> ${dataFoto}</div>
-    </div>
+  <img
+    src="${photoUrl}"
+    class="detail-photo"
+    onerror="handleImageError(this)"
+    alt="Foto ${o.Codice}"
+  />
+  <div class="detail-info">
+    <div class="title">${title}</div>
+    <div class="subtitle">${subtitle}</div>
+    <div class="collocazione"><strong>Collocazione:</strong> ${colloc}</div>
+    <div class="coords"><strong>Coordinate:</strong> ${o['Coordinate WGS84'] || ''}</div>
+    <div class="type">${type}</div>
+    <div class="datazione"><strong>Datazione:</strong> ${o.Datazione || ''}</div>
+    <div class="materiale"><strong>Materiale:</strong> ${o.Materiale || ''}</div>
+    <div class="dimensioni"><strong>Dimensioni cm:</strong> ${o['Dimensioni cm'] || ''}</div>
+    <div class="descrizione"><strong>Descrizione:</strong> ${descr}</div>
+    <div class="iscrizione"><strong>Iscrizione:</strong> ${iscr}</div>
+    <div class="condizioni"><strong>Condizioni:</strong> ${cond}</div>
+    <div class="bibliografia"><strong>Bibliografia:</strong> ${bibl}</div>
+    <div class="datafoto"><strong>Data della fotografia:</strong> ${dataFoto}</div>
+    <div class="note"><strong>Note:</strong> ${notes}</div>
+  </div>
+</div>
   `;
 
   // Riutilizza la mappa home ma con un solo marker
@@ -514,14 +578,21 @@ L.marker([lat, lng]).addTo(map);
 
 function updateBreadcrumb() {
   const breadcrumb = document.getElementById('breadcrumb');
-  let parts = [];
+  if (!breadcrumb) return;
 
-  if (selectedS) parts.push(selectedS);
-  if (selectedP) parts.push(selectedP);
-  if (selectedA) parts.push(selectedA);
+  // Se siamo in modalità dettaglio, non mostrare nulla
+  if (document.body.classList.contains('detail-mode')) {
+    breadcrumb.innerHTML = '';
+    return;
+  }
 
-  breadcrumb.textContent = parts.join(' > ') || 'Archivio';
+  const parts = [];
+  if (selectedS) parts.push(`Sestiere di ${selectedS}`);
+  if (selectedP) parts.push(`Parrocchia di ${selectedP}`);
+  if (selectedA) parts.push(`${selectedA}`);
+  breadcrumb.innerHTML = parts.join(' ➔ ');
 }
+
 
 function handleImageError(imgElement) {
   imgElement.onerror = null; // evita loop infiniti
