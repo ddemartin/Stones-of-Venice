@@ -2,17 +2,21 @@
 const JSON_URL = 'https://script.google.com/macros/s/AKfycbyt2cEYGcsimAsPRB-tG2fCy-qDCkMvqV5QZmI1pV5r0VLE2L4a571PaYwa7S-o4SnY/exec';
 
 // Base URL per le immagini
-const BASE_PHOTO_URL = 'https://res.cloudinary.com/dzkq1canb/image/upload/';
+const BASE_PHOTOS_URL = 'https://res.cloudinary.com/dzkq1canb/image/upload/Assets_Stones-of-Venice/images/';
+const BASE_THUMBS_URL = 'https://res.cloudinary.com/dzkq1canb/image/upload/Assets_Stones-of-Venice/thumbs/';
 
 let allData = [];
 let currentTerm = '';
 let currentMode = '';
+let cameFromSearch = false;
 let selectedS = '';
 let selectedP = '';
 let selectedA = '';
 let selectedTipo = '';
 let currentList = [];
 let currentIndex = -1;
+let previousMapZoom = 13;
+let previousZoom = null;
 
 // Definisce il nome file delle immagini in base a Codice e Data del foglio
 function getImageFilename(o) {
@@ -57,7 +61,7 @@ function renderBackLink() {
   startLink.style.marginBottom = '0.5em';
   startLink.href = '#';
 
-  if (!selectedS && !selectedP && !selectedA && !selectedTipo && !currentMode) {
+  if (!selectedS && !selectedP && !selectedA && !selectedTipo && !currentMode && !cameFromSearch) {
     startLink.style.pointerEvents = 'none';
     startLink.style.color = '#888';
     startLink.style.textDecoration = 'none';
@@ -100,6 +104,9 @@ function goBack() {
     clearSidebar();
     buildMenuList([...new Set(filtered.map(o => o.Indirizzo))].sort(), selectIndirizzo);
     renderCards(filtered);
+  const nav = document.getElementById('nav-arrows');
+  if (nav) nav.style.display = 'none';
+
   } else if (selectedP) {
     selectedP = '';
     filtered = allData.filter(o => o.Sestiere === selectedS);
@@ -130,11 +137,11 @@ function goBack() {
 
   setTimeout(() => {
     if (homeMap) {
-      homeMap.invalidateSize();
       updateHomeMapMarkers(filtered);
       fitMapToMarkers(filtered);
+      homeMap.invalidateSize();
     }
-  }, 300);
+  }, 550); // aspetta la transizione di height (.5s)
 }
 
 // Inizializza l'app al caricamento del DOM
@@ -144,6 +151,8 @@ window.addEventListener('DOMContentLoaded', () => {
     backBtn.style.display = 'none';
     backBtn.onclick = () => showModeMenu();
   }
+
+  cameFromSearch = false; // <-- assicurati che all'avvio sia falso
   fetchData();
 });
 
@@ -163,6 +172,7 @@ async function fetchData() {
 }
 
 // Funzione di ricerca migliorata
+cameFromSearch = true;
 document.getElementById('search').addEventListener('input', function () {
   currentTerm = this.value.trim().toLowerCase();
   if (!currentTerm) {
@@ -215,13 +225,17 @@ function showModeMenu() {
   document.body.classList.remove('detail-mode');
   currentMode = '';
   selectedS = selectedP = selectedA = '';
+  cameFromSearch = false;
   clearSidebar();
   clearContent();
   renderBackLink();
   buildMenuList(['Sestiere', 'Tipo'], selectMode);
   initHomeMap();
-  renderCards(allData); // ✅ mostra subito tutte le cards
-}
+  renderCards(allData);
+  const nav = document.getElementById('nav-arrows');
+  if (nav) nav.style.display = 'none';
+ // ✅ mostra subito tutte le cards
+  }
 
 // Seleziona la modalità di navigazione
 function selectMode(mode) {
@@ -256,6 +270,9 @@ function fitMapToMarkers(data) {
 // Flusso Sestiere → Parrocchia → Indirizzo
 function buildSestiereFlow() {
   renderCards(allData);
+  const nav = document.getElementById('nav-arrows');
+  if (nav) nav.style.display = 'none';
+
   clearSidebar();
   const sestieri = [...new Set(allData.map(o => o.Sestiere))].sort();
   buildMenuList(sestieri, selectSestiere);
@@ -316,6 +333,9 @@ function selectIndirizzo(a) {
 // Flusso Tipo di opera
 function buildTipoFlow() {
   renderCards(allData);
+  const nav = document.getElementById('nav-arrows');
+  if (nav) nav.style.display = 'none';
+
   clearSidebar();
   const tipi = [...new Set(allData.map(o => o.Tipo))].sort();
   buildMenuList(tipi, selectTipo);
@@ -359,6 +379,13 @@ function initHomeMap() {
   }
   
   homeMap = L.map('home-map').setView([45.4371908, 12.3345898], 13); // Centro Venezia
+  const mapContainer = document.getElementById('home-map');
+if (mapContainer) {
+  const resizeObserver = new ResizeObserver(() => {
+    if (homeMap) homeMap.invalidateSize();
+  });
+  resizeObserver.observe(mapContainer);
+}
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors',
@@ -418,6 +445,8 @@ function updateHomeMapMarkers(dataFiltrata) {
 
 // Rende le card di elenco con thumbnail
 function renderCards(data) {
+  const nav = document.getElementById('nav-arrows');
+  if (nav) nav.style.display = 'none';
   if (!data || data.length === 0) {
     clearContent();
     const content = document.getElementById('content');
@@ -461,7 +490,7 @@ function renderCards(data) {
     const card = document.createElement('div');
     card.className = 'card';
     const filename = getImageFilename(o);
-    const thumbUrl = BASE_PHOTO_URL + 'w_80,h_80,c_fill/' + filename;
+    const thumbUrl = BASE_THUMBS_URL + filename;
 
     card.innerHTML = `
       <div style="display: flex; align-items: center;">
@@ -488,7 +517,7 @@ function renderCards(data) {
 function renderDetail(o) {
   document.body.classList.add('detail-mode'); // 🔥 aggiunge la classe
   const backBtn = document.getElementById('back-btn');
-  if (backBtn) backBtn.style.display = 'block';
+  if (backBtn) backBtn.style.display = 'none';
   clearContent();
   
   // tutto il resto del render...  
@@ -508,7 +537,7 @@ function renderDetail(o) {
   const dataFoto = highlight(isoDate ? formatDateISO(isoDate) : '', currentTerm);
   const notes    = highlight(o.Note, currentTerm);
   const filename = getImageFilename(o);
-  const photoUrl = BASE_PHOTO_URL + (filename);
+  const photoUrl = BASE_PHOTOS_URL + (filename);
   
   const lat = parseFloat(o.Latitudine);
   const lng = parseFloat(o.Longitudine);
@@ -540,29 +569,51 @@ function renderDetail(o) {
 </div>
   `;
 
-  // Riutilizza la mappa home ma con un solo marker
-  if (homeMap) {
-    homeMap.eachLayer(function (layer) {
-      if (layer instanceof L.Marker) {
-        homeMap.removeLayer(layer);
-      }
-    });
+  
+  
 
-    if (!isNaN(lat) && !isNaN(lng)) {
-      const marker = L.marker([lat, lng], { icon: smallMarkerIcon }).addTo(homeMap);
-      homeMap.setView([lat, lng], 16); // Zoom su singola opera
-    }
+  // Mostra i bottoni
+  const nav = document.getElementById('nav-arrows');
+  if (nav) nav.style.display = 'flex';
+
+  // Fissa currentIndex se mancante
+  if (!currentList || !Array.isArray(currentList) || currentList.length === 0) {
+    currentList = allData;
+  }
+  if (currentIndex === -1 || !currentList.some(item => item.Codice === o.Codice)) {
+    currentIndex = currentList.findIndex(item => item.Codice === o.Codice);
   }
 
-  // Dopo 500 ms ricentra di nuovo il marker
-  setTimeout(() => {
-    if (homeMap) {
-      homeMap.invalidateSize(); // 🔥 dice a Leaflet di ricalcolare la mappa
-      if (!isNaN(lat) && !isNaN(lng)) {
-        homeMap.setView([lat, lng], 16);
-      }
-    }
-  }, 600);
+  const prevBtn = document.getElementById('prev-btn');
+  const nextBtn = document.getElementById('next-btn');
+  if (prevBtn && nextBtn) {
+    prevBtn.style.display = 'inline-block';
+    nextBtn.style.display = 'inline-block';
+    prevBtn.disabled = currentIndex <= 0;
+    nextBtn.disabled = currentIndex >= currentList.length - 1;
+    prevBtn.onclick = () => {
+      if (currentIndex > 0) renderDetail(currentList[currentIndex - 1]);
+    };
+    nextBtn.onclick = () => {
+      if (currentIndex < currentList.length - 1) renderDetail(currentList[currentIndex + 1]);
+    };
+  }
+// Riutilizza la mappa home ma con un solo marker
+  if (homeMap && !isNaN(lat) && !isNaN(lng)) {
+    previousMapZoom = homeMap.getZoom(); // salva lo zoom attuale
+
+    homeMarkers.forEach(marker => homeMap.removeLayer(marker));
+    homeMarkers = [];
+
+    const marker = L.marker([lat, lng], { icon: smallMarkerIcon }).addTo(homeMap);
+    homeMarkers.push(marker);
+
+    setTimeout(() => {
+      homeMap.invalidateSize(); // forza il ridisegno
+      homeMap.setView([lat, lng], previousMapZoom); // centra correttamente
+    }, 500); // tempo sufficiente per completare l'animazione CSS
+  }
+  }  
   
   // Mappa Leaflet
   const map = L.map('map').setView([lat, lng], 15);
@@ -573,8 +624,6 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 
 L.marker([lat, lng]).addTo(map);
-
-}
 
 function updateBreadcrumb() {
   const breadcrumb = document.getElementById('breadcrumb');
@@ -613,9 +662,4 @@ function updateNavButtons() {
   next.disabled = currentIndex >= currentList.length - 1;
 }
 
-document.getElementById('prev-btn').addEventListener('click', () => {
-  if (currentIndex > 0) renderDetail(currentList[currentIndex - 1]);
-});
-document.getElementById('next-btn').addEventListener('click', () => {
-  if (currentIndex < currentList.length - 1) renderDetail(currentList[currentIndex + 1]);
-});
+
