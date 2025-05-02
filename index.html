@@ -307,7 +307,7 @@ body.detail-mode #home-map {
       padding: 0.8em;
     }
   }
-  </style>  
+    </style>  
 
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" defer></script>
@@ -322,6 +322,7 @@ body.detail-mode #home-map {
   
   <div id="container">
     <div id="sidebar">
+  <a id="back-to-search" href="#" style="display: none;">← Torna ai risultati della ricerca</a>
       <div class="sidebar-header">Menu di navigazione</div>
       <div id="sidebar-back">
         <a href="#" id="back-to-home" style="display:block; margin-bottom: 0.5em;">← Torna alla pagina iniziale</a>
@@ -340,21 +341,18 @@ body.detail-mode #home-map {
       <div id="search-container">
         <input id="search" type="search" placeholder="Cerca..." />
       </div>
-
-      <!-- frecce di navigazione -->
-  <div id="nav-arrows" style="
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 1em;
-  margin-bottom: 1em;
-  flex: 0 0 auto;
-">
-<button id="prev-btn" disabled>← Precedente</button>
-<button id="next-btn" disabled>Successivo →</button>
-</div>
-
-      <div id="content"></div>
+      <div id="nav-arrows" style="
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 1em;
+      margin-bottom: 1em;
+      flex: 0 0 auto;
+    ">
+    <button id="prev-btn" disabled>← Precedente</button>
+    <button id="next-btn" disabled>Successivo →</button>
     </div>
+      <div id="content"></div>
+      </div>
   </div>
 </html>

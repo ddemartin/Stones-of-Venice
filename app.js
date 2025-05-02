@@ -15,6 +15,7 @@ let selectedA = '';
 let selectedTipo = '';
 let currentList = [];
 let currentIndex = -1;
+let searchResults = [];
 let previousMapZoom = 13;
 let previousZoom = null;
 
@@ -95,6 +96,23 @@ function goBack() {
   const mapContainer = document.getElementById('map-container');
   if (mapContainer) mapContainer.style.height = '400px';
 
+  
+  if (cameFromSearch && typeof searchResults !== 'undefined' && searchResults.length > 0) {
+    clearSidebar();
+    clearContent();
+    searchResults = filtered;
+  buildMenuList(['Risultati ricerca'], () => {});
+    renderCards(searchResults);
+    updateHomeMapMarkers(searchResults);
+    updateBreadcrumb();
+    const nav = document.getElementById('nav-arrows');
+    if (nav) nav.style.display = 'none';
+    const backToSearch = document.getElementById('back-to-search');
+    if (backToSearch) backToSearch.style.display = 'none';
+  document.getElementById('search').value = currentTerm;
+    return;
+  }
+
   let filtered = allData;
 
   if (selectedA) {
@@ -142,6 +160,11 @@ function goBack() {
       homeMap.invalidateSize();
     }
   }, 550); // aspetta la transizione di height (.5s)
+
+  const backToSearch = document.getElementById('back-to-search');
+  if (backToSearch) backToSearch.style.display = 'none';
+  document.getElementById('search').value = currentTerm;
+
 }
 
 // Inizializza l'app al caricamento del DOM
@@ -155,6 +178,12 @@ window.addEventListener('DOMContentLoaded', () => {
   cameFromSearch = false; // <-- assicurati che all'avvio sia falso
   fetchData();
 });
+
+document.getElementById('back-to-search').addEventListener('click', function (e) {
+  e.preventDefault();
+  goBack();
+});
+
 
 // Fetch dei dati e avvio del menu iniziale
 async function fetchData() {
@@ -172,8 +201,8 @@ async function fetchData() {
 }
 
 // Funzione di ricerca migliorata
-cameFromSearch = true;
 document.getElementById('search').addEventListener('input', function () {
+  cameFromSearch = true;
   currentTerm = this.value.trim().toLowerCase();
   if (!currentTerm) {
     if (currentMode === 'Sestiere') buildSestiereFlow();
@@ -196,6 +225,7 @@ document.getElementById('search').addEventListener('input', function () {
 
   clearSidebar();
   clearContent();
+  searchResults = filtered;
   buildMenuList(['Risultati ricerca'], () => {});
 
   if (filtered.length > 0) {
@@ -263,7 +293,14 @@ function buildMenuList(items, handler) {
 
 function fitMapToMarkers(data) {
   if (!data || !data.length || !homeMap) return;
-  const bounds = L.latLngBounds(data.map(o => [parseFloat(o.Latitudine), parseFloat(o.Longitudine)]));
+
+  const boundsData = data.filter(o =>
+    !isNaN(parseFloat(o.Latitudine)) && !isNaN(parseFloat(o.Longitudine))
+  );
+
+  if (boundsData.length === 0) return;
+
+  const bounds = L.latLngBounds(boundsData.map(o => [parseFloat(o.Latitudine), parseFloat(o.Longitudine)]));
   homeMap.fitBounds(bounds, { padding: [20, 20] });
 }
 
@@ -515,7 +552,30 @@ function renderCards(data) {
 
 // Rende la vista dettaglio senza cancellare il menu
 function renderDetail(o) {
-  document.body.classList.add('detail-mode'); // 🔥 aggiunge la classe
+  document.body.classList.add('detail-mode');
+    const backToSearch = document.getElementById('back-to-search');
+  if (cameFromSearch) {
+    let backToSearch = document.getElementById('back-to-search');
+    if (!backToSearch) {
+      backToSearch = document.createElement('a');
+      backToSearch.id = 'back-to-search';
+      backToSearch.href = '#';
+      backToSearch.textContent = '← Torna ai risultati della ricerca';
+      backToSearch.style.display = 'block';
+      backToSearch.style.marginBottom = '1em';
+      backToSearch.style.color = '#007bff';
+      backToSearch.onclick = e => {
+        e.preventDefault();
+        returnToSearchResults();
+      };
+      const sidebar = document.getElementById('sidebar');
+      if (sidebar) {
+        sidebar.insertBefore(backToSearch, sidebar.firstChild);
+      }
+    } else {
+      backToSearch.style.display = 'block';
+    }
+  } // 🔥 aggiunge la classe
   const backBtn = document.getElementById('back-btn');
   if (backBtn) backBtn.style.display = 'none';
   clearContent();
@@ -615,15 +675,7 @@ function renderDetail(o) {
   }
   }  
   
-  // Mappa Leaflet
-  const map = L.map('map').setView([lat, lng], 15);
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; OpenStreetMap contributors',
-  maxZoom: 19
-}).addTo(map);
-
-L.marker([lat, lng]).addTo(map);
+  // RIMOSSO: doppia mappa duplicata in renderDetail()
 
 function updateBreadcrumb() {
   const breadcrumb = document.getElementById('breadcrumb');
@@ -663,3 +715,32 @@ function updateNavButtons() {
 }
 
 
+
+
+function returnToSearchResults() {
+  if (typeof searchResults !== 'undefined' && searchResults.length > 0) {
+    document.body.classList.remove('detail-mode');
+
+    const mapContainer = document.getElementById('map-container');
+    if (mapContainer) mapContainer.style.height = '400px';
+
+    clearSidebar();
+    clearContent();
+    buildMenuList(['Risultati ricerca'], () => {});
+    
+    currentList = searchResults;
+    currentIndex = -1;
+
+    renderCards(searchResults);
+    updateHomeMapMarkers(searchResults);
+    updateBreadcrumb();
+
+    const nav = document.getElementById('nav-arrows');
+    if (nav) nav.style.display = 'none';
+
+    const backToSearch = document.getElementById('back-to-search');
+    if (backToSearch) backToSearch.style.display = 'none';
+
+    document.getElementById('search').value = currentTerm;
+  }
+}
