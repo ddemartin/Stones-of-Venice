@@ -1,15 +1,42 @@
 <!DOCTYPE html>
+
 <html lang="it">
 <head>
-  <meta charset="utf-8">
-  <title>Archivio fotografico delle sculture erratiche all'aperto di Venezia e della sua Laguna</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <!-- Leaflet CSS per la mappa -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-
-  <!-- Stili personalizzati -->
-  <style>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="Archivio fotografico delle sculture erratiche all'aperto di Venezia e della sua Laguna, a cura di Davide De Martin." name="description"/>
+<meta content="Davide De Martin" name="author"/>
+<meta content="Archivio Sculture Erratiche Venezia" property="og:title"/>
+<meta content="Consulta online le sculture all'aperto presenti nella laguna veneziana." property="og:description"/>
+<meta content="website" property="og:type"/>
+<meta content="https://upload.wikimedia.org/wikipedia/commons/5/53/Venezia_centro.png" property="og:image"/>
+<meta content="index, follow" name="robots"/>
+<meta charset="utf-8"/>
+<title>Archivio fotografico delle sculture erratiche all'aperto di Venezia e della sua Laguna</title>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<!-- Leaflet CSS per la mappa -->
+<link href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" rel="stylesheet"/>
+<!-- Stili personalizzati -->
+<style>
+.context-photo-section {
+  margin-top: 2em;
+  padding-top: 1em;
+  border-top: 1px solid #ccc;
+}
+.context-photo-section h3 {
+  font-size: 1.1em;
+  margin-bottom: 0.5em;
+  color: #444;
+}
+.context-photo-section .detail-photo {
+  margin-bottom: 0.5em;
+  max-width: 100%;
+  height: auto;
+}
+.context-caption {
+  font-size: 0.9em;
+  color: #555;
+  margin-bottom: 1em;
+}
     #pagination {
   margin-top: 0.5em !important;
 }
@@ -273,75 +300,191 @@ body.detail-mode #home-map {
       to { opacity: 1; transform: translateY(0); }
   }
   </style>
-
 <style>
-  @media (max-width: 768px) {
-  .detail-card {
-    flex-direction: column;
-  }
-    header h1 {
-      font-size: 1.2em;
-    }
-    header p {
-      font-size: 0.9em;
-    }
-    #container {
-      flex-direction: column;
-    }
-    #sidebar {
-      flex: 0 0 auto;
-      width: 100%;
-      border-right: none;
-      border-bottom: 1px solid #ddd;
-    }
-    #main {
-      padding: 0.5em;
-    }
-    #content {
-      display: flex;
-      flex-direction: column;
-    }
-    .card {
-      width: 100% !important;
-      margin: 0.5em 0;
-      padding: 0.8em;
-    }
-  }
-    </style>  
+.context-photo-section {
+  margin-top: 2em;
+  padding-top: 1em;
+  border-top: 1px solid #ccc;
+}
+.context-photo-section h3 {
+  font-size: 1.1em;
+  margin-bottom: 0.5em;
+  color: #444;
+}
+.context-photo-section .detail-photo {
+  margin-bottom: 0.5em;
+  max-width: 100%;
+  height: auto;
+}
+.context-caption {
+  font-size: 0.9em;
+  color: #555;
+  margin-bottom: 1em;
+}
+  
 
-  <!-- Leaflet JS -->
-  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.2/lazysizes.min.js" async></script>
-  <script src="app.js" defer></script>
+#menu-toggle {
+  display: none;
+  position: absolute;
+  left: 1em;
+  top: 1em;
+  font-size: 1.8em;
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 1002;
+}
+
+@media (max-width: 768px) {
+  #menu-toggle {
+    display: block;
+    z-index: 1001;
+  }
+
+  #container {
+    flex-direction: column !important;
+    position: relative;
+  }
+
+  #sidebar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: white;
+    z-index: 2001;
+    width: 40%;
+overflow-y: auto;
+padding: 1em;
+    height: 100vh;
+    padding: 1em;
+    overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+
+  #sidebar.open {
+    transform: translateX(0);
+  }
+
+  #main {
+  width: 100%;
+  padding: 1em;
+  box-sizing: border-box;
+  overflow-x: hidden;
+  }
+
+  
+#overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(2px);
+  z-index: 2000;
+  pointer-events: auto;
+  pointer-events: auto;
+}
+
+
+  
+#overlay.active {
+  display: block;
+}
+
+}
+
+</style>
+<!-- Leaflet JS -->
+<script defer="" src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script async="" src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.2/lazysizes.min.js"></script>
+<script defer="" src="app.js"></script>
+
+
+<!-- Override per layout a colonna singola -->
+<style>
+.detail-mode .detail-card {
+  display: flex !important;
+  flex-direction: column !important;
+}
+.detail-mode .detail-card > .detail-photo,
+.detail-mode .detail-card > .detail-info {
+  width: 100% !important;
+}
+</style>
+
+
+
+<!-- Fix layout: single column including context-photo-section -->
+<style>
+.detail-photo, .context-photo-section, .context-photo-section figure {
+  display: block !important;
+  width: 100% !important;
+}
+</style>
+
+
+  <!-- Forza stacking in colonna unica -->
+  <style>
+    body.detail-mode #content {
+      display: block !important;
+    }
+    body.detail-mode #content > * {
+      width: 100% !important;
+      display: block !important;
+    }
+  </style>
+
+
+  <!-- Override per immagini opzionali a dimensione originale -->
+  <style>
+    .context-photo-section img {
+      width: auto !important;
+      height: auto !important;
+      max-width: none !important;
+      max-height: none !important;
+    }
+  </style>
+
+  <!-- Override per allineare a sinistra le didascalie -->
+  <style>
+    .context-photo-section figcaption,
+    .detail-card figcaption,
+    .detail-card .caption {
+      text-align: left !important;
+    }
+  </style>
 </head>
 <body>
-  <header>
-    <h1>Archivio fotografico delle sculture erratiche all'aperto di Venezia e della sua Laguna</h1>
-    <p>A cura di Davide De Martin</p>
-  </header>
-  
-  <div id="container">
-    <div id="sidebar">
-  <a id="back-to-search" href="#" style="display: none;">← Torna ai risultati della ricerca</a>
-      <div class="sidebar-header">Menu di navigazione</div>
-      <div id="sidebar-back">
-        <a href="#" id="back-to-home" style="display:block; margin-bottom: 0.5em;">← Torna alla pagina iniziale</a>
-      </div>
-     
-    </div>
-    <div id="main">
-      <div id="back-container">
-        <div id="back-breadcrumb" style="display:flex; align-items:center; gap: 1em;">
-          <button id="back-btn" style="display:none;">← Torna indietro</button>
-          <div id="breadcrumb" style="font-size: 0.9em; color: #555;"></div>
-        </div>
-      </div>
-      <div id="intro">Consulta l'archivio navigando nel menu a sinistra oppure cerca un'opera mediante la barra di ricerca qui sotto.</div>
-      <div id="home-map"></div>
-      <div id="search-container">
-        <input id="search" type="search" placeholder="Cerca..." />
-      </div>
-      <div id="nav-arrows" style="
+<div id="overlay"></div>
+<header>
+<button aria-label="Apri menu" id="menu-toggle" style="position: absolute; left: 1em; top: 1em; font-size: 1.8em; background: none; border: none; cursor: pointer; z-index: 1002;">
+    ☰
+  </button>
+<h1>Archivio fotografico delle sculture erratiche all'aperto di Venezia e della sua Laguna</h1>
+<p>A cura di Davide De Martin</p>
+</header>
+<div id="container">
+<div id="sidebar">
+<a href="#" id="back-to-search" style="display: none;">← Torna ai risultati della ricerca</a>
+<div class="sidebar-header">Menu di navigazione</div>
+<div id="sidebar-back">
+<a href="#" id="back-to-home" style="display:block; margin-bottom: 0.5em;">← Torna alla pagina iniziale</a>
+</div>
+</div>
+<div id="main">
+<div id="back-container">
+<div id="back-breadcrumb" style="display:flex; align-items:center; gap: 1em;">
+<button id="back-btn" style="display:none;">← Torna indietro</button>
+<div id="breadcrumb" style="font-size: 0.9em; color: #555;"></div>
+</div>
+</div>
+<div id="intro">Consulta l'archivio navigando nel menu a sinistra oppure cerca un'opera mediante la barra di ricerca qui sotto.</div>
+<div id="home-map"></div>
+<div id="search-container">
+<input id="search" placeholder="Cerca..." type="search"/>
+</div>
+<div id="nav-arrows" style="
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -349,10 +492,66 @@ body.detail-mode #home-map {
       margin-bottom: 1em;
       flex: 0 0 auto;
     ">
-    <button id="prev-btn" disabled>← Precedente</button>
-    <button id="next-btn" disabled>Successivo →</button>
-    </div>
-      <div id="content"></div>
-      </div>
-  </div>
+<button disabled="" id="prev-btn">← Precedente</button>
+<button disabled="" id="next-btn">Successivo →</button>
+</div>
+<div id="content"></div>
+</div>
+</div> <!-- chiusura #container -->
+<footer style="
+  text-align: center;
+  padding: 1em;
+  font-size: 0.9em;
+  color: #777;
+  background: #f9f9f9;
+  border-top: 1px solid #ddd;
+  flex-shrink: 0;
+">
+  © 2025 Davide De Martin. Tutti i diritti riservati. Contatti: <a href="mailto:ddemartin@gmail.com">ddemartin@gmail.com</a>
+</footer>
+<script>
+  const toggle = document.getElementById('menu-toggle');
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('overlay');
+
+  function openMenu() {
+    sidebar.classList.add('open');
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeMenu() {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  toggle.addEventListener('click', openMenu);
+  overlay.addEventListener('click', (e) => {
+  if (e.target === overlay) closeMenu();
+});
+</script>
+<style>
+/* Override layout per layout verticale forzato */
+.detail-card {
+  display: block !important;
+  width: 100% !important;
+}
+.detail-card > * {
+  width: 100% !important;
+}
+</style>
+<script>
+// Override renderDetail to strip inline styles on .detail-card, forcing single column
+if(window.renderDetail instanceof Function){
+  const _orig = window.renderDetail;
+  window.renderDetail = function(o){
+    _orig(o);
+    const dc = document.querySelector('.detail-card');
+    if(dc) dc.removeAttribute('style');
+  };
+}
+</script>
+
+</body>
 </html>

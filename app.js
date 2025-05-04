@@ -19,10 +19,32 @@ let searchResults = [];
 let previousMapZoom = 13;
 let previousZoom = null;
 
+
+function updateURLParams() {
+  const params = new URLSearchParams();
+const s = params.get('s');
+const p = params.get('p');
+const a = params.get('a');
+const t = params.get('t');
+const searchParam = params.get('q');
+const idParam = params.get('id');
+  if (selectedS) params.set('s', selectedS);
+  if (selectedP) params.set('p', selectedP);
+  if (selectedA) params.set('a', selectedA);
+  if (selectedTipo) params.set('t', selectedTipo);
+  const url = `${window.location.pathname}?${params.toString()}`;
+  history.replaceState(null, '', url);
+}
+
+
 // Definisce il nome file delle immagini in base a Codice e Data del foglio
 function getImageFilename(o) {
   const datePart = (o['Data miglior foto'] || '').slice(0, 10);
   return `${o.Codice}-${datePart}.jpg`;
+  // Aggiorna hash per deep link
+  if (o.Codice) {
+    window.location.hash = `#${o.Codice}`;
+  }
 }
 
 // Evidenziazione dei termini trovati
@@ -70,6 +92,7 @@ function renderBackLink() {
     startLink.onclick = e => {
       e.preventDefault();
       showModeMenu();
+    history.replaceState(null, '', window.location.pathname);
     };
   }
 
@@ -110,6 +133,7 @@ function goBack() {
     const backToSearch = document.getElementById('back-to-search');
     if (backToSearch) backToSearch.style.display = 'none';
   document.getElementById('search').value = currentTerm;
+    document.getElementById('search').focus();
     return;
   }
 
@@ -122,6 +146,10 @@ function goBack() {
     clearSidebar();
     buildMenuList([...new Set(filtered.map(o => o.Indirizzo))].sort(), selectIndirizzo);
     renderCards(filtered);
+  updateURLParams();
+  updateURLParams();
+  updateURLParams();
+  updateURLParams();
   const nav = document.getElementById('nav-arrows');
   if (nav) nav.style.display = 'none';
 
@@ -132,6 +160,10 @@ function goBack() {
     clearSidebar();
     buildMenuList([...new Set(filtered.map(o => o.Parrocchia))].sort(), selectParrocchia);
     renderCards(filtered);
+  updateURLParams();
+  updateURLParams();
+  updateURLParams();
+  updateURLParams();
   } else if (selectedS) {
     selectedS = '';
     currentList = allData;
@@ -139,14 +171,23 @@ function goBack() {
     const sestieri = [...new Set(filtered.map(o => o.Sestiere))].sort();
     buildMenuList(sestieri, selectSestiere);
     renderCards(filtered);
+  updateURLParams();
+  updateURLParams();
+  updateURLParams();
+  updateURLParams();
   } else if (selectedTipo) {
     selectedTipo = '';
     currentList = allData;
     clearSidebar();
     buildTipoFlow(); // torna alla lista dei tipi
     renderCards(filtered);
+  updateURLParams();
+  updateURLParams();
+  updateURLParams();
+  updateURLParams();
   } else {
     showModeMenu();
+    history.replaceState(null, '', window.location.pathname);
     updateBreadcrumb();
     return;
   }
@@ -164,19 +205,82 @@ function goBack() {
   const backToSearch = document.getElementById('back-to-search');
   if (backToSearch) backToSearch.style.display = 'none';
   document.getElementById('search').value = currentTerm;
+    document.getElementById('search').focus();
 
 }
 
 // Inizializza l'app al caricamento del DOM
+// Gestione deep linking all'avvio
 window.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  // Extract URL parameters for deep linking and filters
+  const idParam = params.get('id');
+  const s = params.get('s');
+  const p = params.get('p');
+  const a = params.get('a');
+  const t = params.get('t');
+  const searchParam = params.get('q');
+
+
+
+
+  
+    
   const backBtn = document.getElementById('back-btn');
   if (backBtn) {
     backBtn.style.display = 'none';
     backBtn.onclick = () => showModeMenu();
+    history.replaceState(null, '', window.location.pathname);
   }
 
-  cameFromSearch = false; // <-- assicurati che all'avvio sia falso
-  fetchData();
+  cameFromSearch = false;
+
+  
+fetchData().then(() => {
+    if (idParam) {
+      const match = allData.find(o => o.Codice === idParam);
+      if (match) return renderDetail(match);
+        updateURLParams();
+    }
+    if (s) {
+      selectSestiere(s);
+      if (p) {
+        setTimeout(() => {
+          selectParrocchia(p);
+          if (a) {
+            setTimeout(() => {
+              selectIndirizzo(a);
+            }, 50);
+          }
+        }, 50);
+      }
+    } else if (t) {
+      selectTipo(t);
+    } else if (searchParam) {
+      const input = document.getElementById('search');
+      if (input) {
+        input.value = searchParam;
+        input.dispatchEvent(new Event('input'));
+      }
+    } else {
+      showModeMenu();
+    history.replaceState(null, '', window.location.pathname);
+    }
+
+    if (searchParam) {
+      const input = document.getElementById('search');
+      if (input) {
+        input.value = searchParam;
+        input.dispatchEvent(new Event('input'));
+      }
+    } else if (idParam) {
+      const match = allData.find(o => o.Codice === idParam);
+      if (match) {
+        renderDetail(match);
+        updateURLParams();
+      }
+    }
+  });
 });
 
 document.getElementById('back-to-search').addEventListener('click', function (e) {
@@ -193,7 +297,15 @@ async function fetchData() {
     const res = await fetch(JSON_URL);
     if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
     allData = await res.json();
+    // Deep link: se c'è hash nell'URL, mostra direttamente il dettaglio
+    const hash = window.location.hash.replace('#', '').toUpperCase();
+    if (hash) {
+      const match = allData.find(item => item.Codice === hash);
+      if (match) renderDetail(match);
+        updateURLParams();
+    }
     showModeMenu();
+    history.replaceState(null, '', window.location.pathname);
   } catch (err) {
     console.error('Errore caricamento JSON:', err);
     document.getElementById('sidebar').innerHTML = '<p style="color:red; padding:1em;">Impossibile caricare i dati.</p>';
@@ -208,6 +320,7 @@ document.getElementById('search').addEventListener('input', function () {
     if (currentMode === 'Sestiere') buildSestiereFlow();
     else if (currentMode === 'Tipo') buildTipoFlow();
     else showModeMenu();
+    history.replaceState(null, '', window.location.pathname);
     return;
   }
 
@@ -230,6 +343,10 @@ document.getElementById('search').addEventListener('input', function () {
 
   if (filtered.length > 0) {
     renderCards(filtered);
+  updateURLParams();
+  updateURLParams();
+  updateURLParams();
+  updateURLParams();
   } else {
     document.getElementById('content').innerHTML = `
       <p style="color: #888; font-size: 1.2em; text-align: center; margin-top: 2em;">
@@ -328,6 +445,10 @@ function selectSestiere(s) {
   renderBackLink();
   const filtered = allData.filter(o => o.Sestiere === s);
   renderCards(filtered);
+  updateURLParams();
+  updateURLParams();
+  updateURLParams();
+  updateURLParams();
   updateHomeMapMarkers(filtered);
   buildMenuList([...new Set(filtered.map(o => o.Parrocchia))].sort(), selectParrocchia);
 }
@@ -346,6 +467,10 @@ function selectParrocchia(p) {
   renderBackLink();
   const filtered = allData.filter(o => o.Parrocchia === p);
   renderCards(filtered);
+  updateURLParams();
+  updateURLParams();
+  updateURLParams();
+  updateURLParams();
   updateHomeMapMarkers(filtered);
   buildMenuList([...new Set(filtered.map(o => o.Indirizzo))].sort(), selectIndirizzo);
 }
@@ -364,6 +489,10 @@ function selectIndirizzo(a) {
   renderBackLink();
   const filtered = allData.filter(o => o.Indirizzo === a);
   renderCards(filtered);
+  updateURLParams();
+  updateURLParams();
+  updateURLParams();
+  updateURLParams();
   updateHomeMapMarkers(filtered);
 }
 
@@ -392,6 +521,10 @@ function selectTipo(t) {
   
   const filtered = allData.filter(o => o.Tipo === t);
   renderCards(filtered);
+  updateURLParams();
+  updateURLParams();
+  updateURLParams();
+  updateURLParams();
   updateHomeMapMarkers(filtered);
   fitMapToMarkers(filtered);
   updateBreadcrumb();
@@ -576,6 +709,9 @@ function renderDetail(o) {
       backToSearch.style.display = 'block';
     }
   } // 🔥 aggiunge la classe
+  const params = new URLSearchParams(window.location.search);
+  params.set('id', o.Codice);
+  history.replaceState(null, '', `${window.location.pathname}?${params.toString()}`);
   const backBtn = document.getElementById('back-btn');
   if (backBtn) backBtn.style.display = 'none';
   clearContent();
@@ -598,12 +734,42 @@ function renderDetail(o) {
   const notes    = highlight(o.Note, currentTerm);
   const filename = getImageFilename(o);
   const photoUrl = BASE_PHOTOS_URL + (filename);
+
+  // Inserimento foto opz1 accanto a quella principale
+  const fotoOpz1 = o["Foto opz1"];
+  const dataOpz1 = o["Data opz1"];
+  const didaOpz1 = o["Dida opz1"];
+  let fotoOpz1HTML = "";
+  const fotoOpz2 = o["Foto opz2"];
+  const dataOpz2 = o["Data opz2"];
+  const didaOpz2 = o["Dida opz2"];
+  let fotoOpz2HTML = "";
+  if (fotoOpz2 && dataOpz2) {
+    const opz2Url = BASE_PHOTOS_URL + `${fotoOpz2}-${dataOpz2}.jpg`;
+    const opz2Caption = `${didaOpz2 || ""} Data della fotografia ${formatDateISO(dataOpz2)}`;
+    fotoOpz2HTML = `
+      <div class="detail-context-photo">
+        <img src="${opz2Url}" class="detail-photo" onerror="handleImageError(this)" alt="Foto opzionale 2" />
+        <p class="context-caption">${opz2Caption}</p>
+      </div>`;
+  }
+
+  if (fotoOpz1 && dataOpz1) {
+    const opz1Url = BASE_PHOTOS_URL + `${fotoOpz1}-${dataOpz1}.jpg`;
+    const opz1Caption = `${didaOpz1 || ""} Data della fotografia ${formatDateISO(dataOpz1)}`;
+    fotoOpz1HTML = `
+      <div class="detail-context-photo">
+        <img src="${opz1Url}" class="detail-photo" onerror="handleImageError(this)" alt="Foto opzionale 1" />
+        <p class="context-caption">${opz1Caption}</p>
+      </div>
+    `;
+  }
   
   const lat = parseFloat(o.Latitudine);
   const lng = parseFloat(o.Longitudine);
 
   content.innerHTML = `
-    <div class="detail-card">
+    <div class="detail-card" style="flex-direction: column !important; align-items: stretch !important;">
   <img
     src="${photoUrl}"
     class="detail-photo"
@@ -627,6 +793,20 @@ function renderDetail(o) {
     <div class="note"><strong>Note:</strong> ${notes}</div>
   </div>
 </div>
+        ${(fotoOpz1HTML || fotoOpz2HTML) ? `
+  <div class="context-photo-section" style="margin-top: 2em; padding-top: 1em; border-top: 1px solid #ccc; width: 100%;">
+    <h3 style="text-align: center;">Fotografie aggiuntive</h3>
+    ${fotoOpz1 ? `
+    <figure style="margin-bottom: 2em; flex-direction: column; align-items: center;">
+      <img src="${BASE_PHOTOS_URL}${fotoOpz1}-${dataOpz1}.jpg" class="detail-photo" onerror="handleImageError(this)" alt="Foto opzionale 1" />
+      <figcaption class="context-caption" style="text-align: center;">${didaOpz1 || ''} ${dataOpz1 ? 'Data della fotografia ' + formatDateISO(dataOpz1) : ''}</figcaption>
+    </figure>` : ''}
+    ${fotoOpz2 ? `
+    <figure style="margin-bottom: 2em; flex-direction: column; align-items: center;">
+      <img src="${BASE_PHOTOS_URL}${fotoOpz2}-${dataOpz2}.jpg" class="detail-photo" onerror="handleImageError(this)" alt="Foto opzionale 2" />
+      <figcaption class="context-caption" style="text-align: center;">${didaOpz2 || ''} ${dataOpz2 ? 'Data della fotografia ' + formatDateISO(dataOpz2) : ''}</figcaption>
+    </figure>` : ''}
+  </div>` : ''}
   `;
 
   
@@ -742,5 +922,16 @@ function returnToSearchResults() {
     if (backToSearch) backToSearch.style.display = 'none';
 
     document.getElementById('search').value = currentTerm;
+    document.getElementById('search').focus();
   }
 }
+
+// Se c'è hash nell'URL, mostra direttamente il dettaglio
+window.addEventListener('load', () => {
+  const hash = window.location.hash.replace('#', '').toUpperCase();
+  if (hash) {
+    const match = allData.find(item => item.Codice === hash);
+    if (match) renderDetail(match);
+        updateURLParams();
+  }
+});

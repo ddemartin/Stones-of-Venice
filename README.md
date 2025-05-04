@@ -1,71 +1,72 @@
-# Archivio Fotografico delle Sculture Erratiche di Venezia e della sua Laguna
+# Archivio Fotografico delle Sculture Erratiche – Venezia
 
-**A cura di Davide De Martin**
-
----
-
-## 📚 Descrizione
-
-Questo progetto è un'applicazione web che permette di navigare un archivio fotografico delle sculture erratiche situate all'aperto a Venezia e nella sua laguna.  
-Gli utenti possono esplorare le opere per sestiere, tipo, indirizzo e visualizzare dettagliate fotografie e informazioni.
+Questa è una web app per consultare un **archivio fotografico delle sculture erratiche all'aperto** presenti a Venezia e nella sua laguna. È stata progettata per essere **intuitiva**, **mobile-friendly** e **navigabile sia da mappa che da ricerca libera**.
 
 ---
 
-## 🗂️ Struttura del Progetto
+## ✅ Funzionalità principali
 
-- **Frontend**: HTML, CSS, JavaScript Vanilla
-- **Backend dati**: Google Sheets + Google Apps Script per generare un JSON accessibile pubblicamente
-- **Hosting immagini**: Cloudinary (versione gratuita)
-- **Mappa interattiva**: Leaflet.js + OpenStreetMap
-- **Hosting**: GitHub Pages (o altro server statico)
+### 🔎 Ricerca
+- Campo di ricerca con placeholder "Cerca..."
+- Ricerca full-text su Codice, Sestiere, Parrocchia, Indirizzo, Civico, Tipo, Descrizione
+- Evidenziazione dei termini trovati
+- Conteggio risultati
+- Funziona anche da URL con `?q=termine`
+
+### 🗺️ Mappa
+- Mappa interattiva di Leaflet con marker per ogni opera geolocalizzata
+- Ridimensionamento automatico per mostrare tutti i marker visibili
+- Visualizzazione ridotta della mappa in modalità dettaglio
+
+### 🧭 Navigazione
+- Esplora per:
+  - Sestiere → Parrocchia → Indirizzo
+  - Tipo → Opera
+- Navigazione avanti/indietro tra opere correlate
+
+### 📄 Scheda di dettaglio
+- Mostra: codice, indirizzo, tipo, collocazione, coordinate, materiale, dimensioni, descrizione, iscrizioni, condizioni, bibliografia, data foto, note
+- Immagine a piena larghezza (con fallback in caso di errore)
+- Map marker per l’opera
+
+### 🔁 Ritorno ai risultati
+- Quando si entra da una ricerca, viene mostrato un link:
+  - **← Torna ai risultati della ricerca**
+- Ritorna esattamente alla lista filtrata
+- Mantiene il termine nel campo di ricerca
+- Rimette il focus automatico sul campo
+
+### 🔗 Deep Linking
+- Supporta:
+  - `?q=termine` → ricerca diretta
+  - `?id=CODICE` → apre direttamente la scheda
+- Comodo per condivisione o link da email/articoli
 
 ---
 
-## 📦 Risorse Utilizzate
+## 📁 Struttura file
 
-| Tipo | Servizio / Tecnologie | Note |
-|:----|:----------------------|:----|
-| **Web App** | HTML + JS | Applicazione front-end |
-| **Hosting Web** | GitHub Pages | Sito statico |
-| **Dati JSON** | Google Apps Script | API JSON basata su Google Sheets |
-| **Hosting Immagini** | Cloudinary | Immagini ad alta risoluzione |
-| **Thumbnail immagini** | GitHub Pages (assets/thumbs) | (non attualmente usate) |
-| **Placeholder immagini** | Placeholder.com | Immagini mancanti |
-| **Mappe** | Leaflet.js + OpenStreetMap | Visualizzazione geografica |
+- `index.html` — Struttura e layout della pagina
+- `app.js` — Logica interattiva della web app
+- `style` — Inline nel file HTML
+- Leaflet per mappa interattiva (CDN)
+- Cloudinary per immagini
 
 ---
 
-## 🔗 Collegamenti principali
-
-- **Dati JSON**: [Google Apps Script API](https://script.google.com/macros/s/AKfycbyt2cEYGcsimAsPRB-tG2fCy-qDCkMvqV5QZmI1pV5r0VLE2L4a571PaYwa7S-o4SnY/exec)
-- **Immagini Cloudinary**: `https://res.cloudinary.com/dzkq1canb/image/upload/`
-- **Thumbs immagini (GitHub Pages)**: `https://ddemartin.github.io/venezia-arte-pubblica/assets/thumbs/`
+## 🛠️ Requisiti
+- Qualsiasi browser moderno (Chrome, Firefox, Safari, Edge)
+- Connessione Internet per caricare dati da Google Apps Script e immagini da Cloudinary
 
 ---
 
-## ⚙️ Tecnologie aggiuntive
-
-- **Leaflet.js**: per le mappe geografiche.
-- **Placeholder.com**: per immagini non disponibili.
-- **OpenStreetMap Tiles**: come base cartografica.
-
----
-
-## 📋 To-Do / Idee future
-
-- Lazy loading delle immagini
-- Ricerca intelligente delle opere
-- Ottimizzazione mobile (responsive)
-- Mappa globale con tutte le opere
-- Barra di filtro avanzato
-- Backup automatico del JSON
+## 📥 Hosting & Deploy
+- Può essere ospitato su GitHub Pages, Netlify, Vercel o qualsiasi server statico
+- Nessun backend necessario
 
 ---
 
 ## ✍️ Autore
+**Davide De Martin**
 
-Davide De Martin  
-Supporto tecnico: ChatGPT OpenAI - assistenza alla progettazione e sviluppo.
-
----
-
+Script realizzato con l’assistenza di **ChatGPT CodeGPT**  
