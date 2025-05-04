@@ -92,6 +92,7 @@ function renderBackLink() {
     startLink.onclick = e => {
       e.preventDefault();
       showModeMenu();
+    if (spinner) spinner.style.display = 'none';
     history.replaceState(null, '', window.location.pathname);
     };
   }
@@ -187,6 +188,7 @@ function goBack() {
   updateURLParams();
   } else {
     showModeMenu();
+    if (spinner) spinner.style.display = 'none';
     history.replaceState(null, '', window.location.pathname);
     updateBreadcrumb();
     return;
@@ -230,6 +232,7 @@ window.addEventListener('DOMContentLoaded', () => {
   if (backBtn) {
     backBtn.style.display = 'none';
     backBtn.onclick = () => showModeMenu();
+    if (spinner) spinner.style.display = 'none';
     history.replaceState(null, '', window.location.pathname);
   }
 
@@ -264,6 +267,7 @@ fetchData().then(() => {
       }
     } else {
       showModeMenu();
+    if (spinner) spinner.style.display = 'none';
     history.replaceState(null, '', window.location.pathname);
     }
 
@@ -291,6 +295,8 @@ document.getElementById('back-to-search').addEventListener('click', function (e)
 
 // Fetch dei dati e avvio del menu iniziale
 async function fetchData() {
+  const spinner = document.getElementById('spinner');
+  if (spinner) spinner.style.display = 'block';
   try {
     document.getElementById('sidebar').innerHTML = '<p style="padding:1em; text-align:center; color:#555;">Caricamento dei dati in corso, attendere...</p>';
 
@@ -305,10 +311,12 @@ async function fetchData() {
         updateURLParams();
     }
     showModeMenu();
+    if (spinner) spinner.style.display = 'none';
     history.replaceState(null, '', window.location.pathname);
   } catch (err) {
     console.error('Errore caricamento JSON:', err);
     document.getElementById('sidebar').innerHTML = '<p style="color:red; padding:1em;">Impossibile caricare i dati.</p>';
+    if (spinner) spinner.style.display = 'none';
   }
 }
 
@@ -320,6 +328,7 @@ document.getElementById('search').addEventListener('input', function () {
     if (currentMode === 'Sestiere') buildSestiereFlow();
     else if (currentMode === 'Tipo') buildTipoFlow();
     else showModeMenu();
+    if (spinner) spinner.style.display = 'none';
     history.replaceState(null, '', window.location.pathname);
     return;
   }
@@ -769,45 +778,55 @@ function renderDetail(o) {
   const lng = parseFloat(o.Longitudine);
 
   content.innerHTML = `
-    <div class="detail-card" style="flex-direction: column !important; align-items: stretch !important;">
-  <img
-    src="${photoUrl}"
-    class="detail-photo"
-    onerror="handleImageError(this)"
-    alt="Foto ${o.Codice}"
-  />
-  <div class="detail-info">
-    <div class="title">${title}</div>
-    <div class="subtitle">${subtitle}</div>
-    <div class="collocazione"><strong>Collocazione:</strong> ${colloc}</div>
-    <div class="coords"><strong>Coordinate:</strong> ${o['Coordinate WGS84'] || ''}</div>
-    <div class="type">${type}</div>
-    <div class="datazione"><strong>Datazione:</strong> ${o.Datazione || ''}</div>
-    <div class="materiale"><strong>Materiale:</strong> ${o.Materiale || ''}</div>
-    <div class="dimensioni"><strong>Dimensioni cm:</strong> ${o['Dimensioni cm'] || ''}</div>
-    <div class="descrizione"><strong>Descrizione:</strong> ${descr}</div>
-    <div class="iscrizione"><strong>Iscrizione:</strong> ${iscr}</div>
-    <div class="condizioni"><strong>Condizioni:</strong> ${cond}</div>
-    <div class="bibliografia"><strong>Bibliografia:</strong> ${bibl}</div>
-    <div class="datafoto"><strong>Data della fotografia:</strong> ${dataFoto}</div>
-    <div class="note"><strong>Note:</strong> ${notes}</div>
+  <div class="detail-card">
+    <style>
+      /* Mantieni formato del testo ereditando stili e dimensioni originali delle immagini opzionali */
+      .detail-card-table img {
+        width: auto !important;
+        height: auto !important;
+        max-width: none !important;
+        max-height: none !important;
+      }
+    </style>
+    <table class="detail-card detail-card-table" style="width:100%; border-collapse: collapse; margin-bottom: 2em;">
+      <tr>
+        <td style="vertical-align: top; padding: 1em; width: 50%;">
+          <img src="${photoUrl}" class="detail-photo" onerror="handleImageError(this)" alt="Foto ${o.Codice}" />
+        </td>
+        <td style="vertical-align: top; padding: 1em; width: 50%;">
+          <div class="detail-info">
+            <div class="title">${title}</div>
+            <div class="subtitle">${subtitle}</div>
+            <div class="collocazione"><strong>Collocazione:</strong> ${colloc}</div>
+            <div class="coords"><strong>Coordinate:</strong> ${o['Coordinate WGS84'] || ''}</div>
+            <div class="type"><strong>${type}</strong></div>
+            <div class="datazione"><strong>Datazione:</strong> ${o.Datazione || ''}</div>
+            <div class="materiale"><strong>Materiale:</strong> ${o.Materiale || ''}</div>
+            <div class="dimensioni"><strong>Dimensioni cm:</strong> ${o['Dimensioni cm'] || ''}</div>
+            <div class="descrizione"><strong>Descrizione:</strong> ${descr}</div>
+            <div class="iscrizione"><strong>Iscrizione:</strong> ${iscr}</div>
+            <div class="condizioni"><strong>Condizioni:</strong> ${cond}</div>
+            <div class="bibliografia"><strong>Bibliografia:</strong> ${bibl}</div>
+            <div class="datafoto"><strong>Data della fotografia:</strong> ${dataFoto}</div>
+            <div class="note"><strong>Note:</strong> ${notes}</div>
+          </div>
+        </td>
+      </tr>
+      ${fotoOpz1HTML ? `
+      <tr>
+        <td colspan="2" style="border-top:1px solid #ccc; padding:1em;">
+          ${fotoOpz1HTML}
+        </td>
+      </tr>` : ''}
+      ${fotoOpz2HTML ? `
+      <tr>
+        <td colspan="2" style="padding:1em;">
+          ${fotoOpz2HTML}
+        </td>
+      </tr>` : ''}
+    </table>
   </div>
-</div>
-        ${(fotoOpz1HTML || fotoOpz2HTML) ? `
-  <div class="context-photo-section" style="margin-top: 2em; padding-top: 1em; border-top: 1px solid #ccc; width: 100%;">
-    <h3 style="text-align: center;">Fotografie aggiuntive</h3>
-    ${fotoOpz1 ? `
-    <figure style="margin-bottom: 2em; flex-direction: column; align-items: center;">
-      <img src="${BASE_PHOTOS_URL}${fotoOpz1}-${dataOpz1}.jpg" class="detail-photo" onerror="handleImageError(this)" alt="Foto opzionale 1" />
-      <figcaption class="context-caption" style="text-align: center;">${didaOpz1 || ''} ${dataOpz1 ? 'Data della fotografia ' + formatDateISO(dataOpz1) : ''}</figcaption>
-    </figure>` : ''}
-    ${fotoOpz2 ? `
-    <figure style="margin-bottom: 2em; flex-direction: column; align-items: center;">
-      <img src="${BASE_PHOTOS_URL}${fotoOpz2}-${dataOpz2}.jpg" class="detail-photo" onerror="handleImageError(this)" alt="Foto opzionale 2" />
-      <figcaption class="context-caption" style="text-align: center;">${didaOpz2 || ''} ${dataOpz2 ? 'Data della fotografia ' + formatDateISO(dataOpz2) : ''}</figcaption>
-    </figure>` : ''}
-  </div>` : ''}
-  `;
+`;
 
   
   

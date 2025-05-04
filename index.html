@@ -2,6 +2,28 @@
 
 <html lang="it">
 <head>
+
+<style>
+#spinner {
+  display: none;
+  border: 8px solid #f3f3f3;
+  border-top: 8px solid #3498db;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 3000;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+</style>
+
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
 <meta content="Archivio fotografico delle sculture erratiche all'aperto di Venezia e della sua Laguna, a cura di Davide De Martin." name="description"/>
 <meta content="Davide De Martin" name="author"/>
@@ -457,6 +479,7 @@ padding: 1em;
 </head>
 <body>
 <div id="overlay"></div>
+<div id="spinner"></div>
 <header>
 <button aria-label="Apri menu" id="menu-toggle" style="position: absolute; left: 1em; top: 1em; font-size: 1.8em; background: none; border: none; cursor: pointer; z-index: 1002;">
     ☰
